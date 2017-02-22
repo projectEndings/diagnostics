@@ -19,6 +19,7 @@
     but I'm not sure if they would. AFAIK, there's no "directory" option
     for oXygen editor variables (see:https://www.oxygenxml.com/doc/versions/18.1/ug-author/topics/editor-variables.html) -->
     <!--    This might be what we need to use: https://www.oxygenxml.com/doc/versions/18.1/ug-author/topics/preferences-custom-editor-variables.html#preferences-custom-editor-variables-->
+    <!--    This might have solved the issue: https://www.oxygenxml.com/forum/topic11034.html-->
   <property name="projectDirectory" value="${projectDirectory}"/>
   
   <target name="documentation">
@@ -28,12 +29,13 @@
   </target>
     
     
+    <!--Nothing here yet-->
   <target name="all">
       <echo message="${projectDirectory}"></echo>
       <description>
           TARGET: all
           This target is the default and runs all the build processes.
       </description>
-      <!--Nothing here yet-->
+
   </target>
 </project>

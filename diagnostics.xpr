@@ -48,7 +48,7 @@
                                                 <String>This asks for a proejct directory from the user. It makes it relative (see http://www.oxygenxml.com/doc/versions/18.1/ug-editor/topics/editor-variables.html)</String>
                                             </field>
                                             <field name="value">
-                                                <String>${ask('Please enter your project directory', relative_url, '')}</String>
+                                                <String>${ask('Please fill in the path to your project's main directory',relative_url, '${home}')}</String>
                                             </field>
                                             <field name="defaultValue">
                                                 <null/>

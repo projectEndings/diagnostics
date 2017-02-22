@@ -1,4 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir="." name="Diagnostics">
+<project basedir="." name="Diagnostics" default="all">
   
+  <description>
+      diagnostics/build.xml
+      
+      ANT FILE FOR TEI PROJECT DIAGNOSTICS.
+      
+      See diagnostics/README.txt for instructions
+      on how to run this diagnostics suite.
+      
+      [[Other descriptive things go here]]
+  </description>
+  
+<!--  This is taken from the editor ask variable named ${projectDirectory}.
+    Problem here is that you can only select a FILE not a DIRECTORY. So, users
+    could choose a direct child of the directory that they wish to analyze, but
+    what if it's a directory just of directories? They could manually type this in,
+    but I'm not sure if they would. AFAIK, there's no "directory" option
+    for oXygen editor variables (see:https://www.oxygenxml.com/doc/versions/18.1/ug-author/topics/editor-variables.html) -->
+    <!--    This might be what we need to use: https://www.oxygenxml.com/doc/versions/18.1/ug-author/topics/preferences-custom-editor-variables.html#preferences-custom-editor-variables-->
+  <property name="projectDirectory" value="${projectDirectory}"/>
+  
+  <target name="documentation">
+      <echo>
+          To see detailed documentation for this build [[more here later]].
+      </echo>
+  </target>
+    
+    
+  <target name="all">
+      <echo message="${projectDirectory}"></echo>
+      <description>
+          TARGET: all
+          This target is the default and runs all the build processes.
+      </description>
+      <!--Nothing here yet-->
+  </target>
 </project>

@@ -2,7 +2,180 @@
 <project version="18.1">
     <meta>
         <filters directoryPatterns="" filePatterns="diagnostics.xpr" positiveFilePatterns="" showHiddenFiles="false"/>
-        <options/>
+        <options>
+            <serialized version="18.1" xml:space="preserve">
+                <map>
+                    <entry>
+                        <String>scenario.associations</String>
+                        <scenarioAssociation-array>
+                            <scenarioAssociation>
+                                <field name="url">
+                                    <String>build.xml</String>
+                                </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>runDiagnostics</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>ANT</String>
+                                    </list>
+                                </field>
+                            </scenarioAssociation>
+                        </scenarioAssociation-array>
+                    </entry>
+                    <entry>
+                        <String>scenarios</String>
+                        <scenario-array>
+                            <antScenario>
+                                <field name="additionalAntArgs">
+                                    <String></String>
+                                </field>
+                                <field name="buildTarget">
+                                    <String></String>
+                                </field>
+                                <field name="buildFilePath">
+                                    <String>${cfne}</String>
+                                </field>
+                                <field name="ditaParams">
+                                    <list>
+                                        <antParameter>
+                                            <field name="name">
+                                                <String>projectDirectory</String>
+                                            </field>
+                                            <field name="description">
+                                                <String>This asks for a proejct directory from the user. It makes it relative (see http://www.oxygenxml.com/doc/versions/18.1/ug-editor/topics/editor-variables.html)</String>
+                                            </field>
+                                            <field name="value">
+                                                <String>${ask('Please enter your project directory', relative_url, '')}</String>
+                                            </field>
+                                            <field name="defaultValue">
+                                                <null/>
+                                            </field>
+                                            <field name="type">
+                                                <Integer>5</Integer>
+                                            </field>
+                                            <field name="possibleValues">
+                                                <null/>
+                                            </field>
+                                            <field name="possibleValuesDescriptions">
+                                                <null/>
+                                            </field>
+                                        </antParameter>
+                                    </list>
+                                </field>
+                                <field name="jvmArgs">
+                                    <String>-Xmx256m</String>
+                                </field>
+                                <field name="useCustomJavaHome">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="customJavaHomeDir">
+                                    <String></String>
+                                </field>
+                                <field name="useCustomANTHome">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="customANTHomeDir">
+                                    <String></String>
+                                </field>
+                                <field name="workingDir">
+                                    <String>${cfd}</String>
+                                </field>
+                                <field name="showConsoleAlways">
+                                    <Boolean>true</Boolean>
+                                </field>
+                                <field name="advancedOptionsMap">
+                                    <null/>
+                                </field>
+                                <field name="name">
+                                    <String>runDiagnostics</String>
+                                </field>
+                                <field name="baseURL">
+                                    <null/>
+                                </field>
+                                <field name="footerURL">
+                                    <null/>
+                                </field>
+                                <field name="fOPMethod">
+                                    <null/>
+                                </field>
+                                <field name="fOProcessorName">
+                                    <null/>
+                                </field>
+                                <field name="headerURL">
+                                    <null/>
+                                </field>
+                                <field name="inputXSLURL">
+                                    <null/>
+                                </field>
+                                <field name="inputXMLURL">
+                                    <null/>
+                                </field>
+                                <field name="defaultScenario">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="isFOPPerforming">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="type">
+                                    <String>ANT</String>
+                                </field>
+                                <field name="saveAs">
+                                    <Boolean>true</Boolean>
+                                </field>
+                                <field name="openInBrowser">
+                                    <Boolean>true</Boolean>
+                                </field>
+                                <field name="outputFile">
+                                    <null/>
+                                </field>
+                                <field name="outputResource">
+                                    <null/>
+                                </field>
+                                <field name="openOtherLocationInBrowser">
+                                    <Boolean>true</Boolean>
+                                </field>
+                                <field name="locationToOpenInBrowserURL">
+                                    <String></String>
+                                </field>
+                                <field name="openInEditor">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="showInHTMLPane">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="showInXMLPane">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="showInSVGPane">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="showInResultSetPane">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="useXSLTInput">
+                                    <Boolean>false</Boolean>
+                                </field>
+                                <field name="xsltParams">
+                                    <list/>
+                                </field>
+                                <field name="cascadingStylesheets">
+                                    <String-array/>
+                                </field>
+                                <field name="xslTransformer">
+                                    <String>ANT</String>
+                                </field>
+                                <field name="extensionURLs">
+                                    <String-array/>
+                                </field>
+                            </antScenario>
+                        </scenario-array>
+                    </entry>
+                </map>
+            </serialized>
+        </options>
     </meta>
     <projectTree name="diagnostics.xpr">
         <folder path="."/>

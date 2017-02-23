@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project version="18.1">
+<project version="16.1">
     <meta>
         <filters directoryPatterns="" filePatterns="diagnostics.xpr" positiveFilePatterns="" showHiddenFiles="false"/>
         <options>
-            <serialized version="18.1" xml:space="preserve">
-                <map>
+            <serialized version="16.1" xml:space="preserve">
+                <serializableOrderedMap>
                     <entry>
                         <String>scenario.associations</String>
                         <scenarioAssociation-array>
@@ -45,10 +45,10 @@
                                                 <String>projectDirectory</String>
                                             </field>
                                             <field name="description">
-                                                <String>This asks for a proejct directory from the user. It makes it relative (see http://www.oxygenxml.com/doc/versions/18.1/ug-editor/topics/editor-variables.html)</String>
+                                                <String>This asks for a project directory from the user. It makes it relative (see http://www.oxygenxml.com/doc/versions/18.1/ug-editor/topics/editor-variables.html)</String>
                                             </field>
                                             <field name="value">
-                                                <String>${ask('Please fill in the path to your project's main directory',relative_url, '${home}')}</String>
+                                                <String>${ask('Please fill in the path to your project's main directory',url, '${home}')}</String>
                                             </field>
                                             <field name="defaultValue">
                                                 <null/>
@@ -56,10 +56,10 @@
                                             <field name="type">
                                                 <Integer>5</Integer>
                                             </field>
-                                            <field name="possibleValues">
-                                                <null/>
+                                            <field name="isPredefined">
+                                                <Boolean>false</Boolean>
                                             </field>
-                                            <field name="possibleValuesDescriptions">
+                                            <field name="possibleValues">
                                                 <null/>
                                             </field>
                                         </antParameter>
@@ -173,7 +173,7 @@
                             </antScenario>
                         </scenario-array>
                     </entry>
-                </map>
+                </serializableOrderedMap>
             </serialized>
         </options>
     </meta>

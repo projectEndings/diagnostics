@@ -9,17 +9,16 @@
       See diagnostics/README.txt for instructions
       on how to run this diagnostics suite.
       
+      Note that this assume oXygen version 17.0 or
+      higher. 
       [[Other descriptive things go here]]
   </description>
   
-<!--  This is taken from the editor ask variable named ${projectDirectory}.
-    Problem here is that you can only select a FILE not a DIRECTORY. So, users
-    could choose a direct child of the directory that they wish to analyze, but
-    what if it's a directory just of directories? They could manually type this in,
-    but I'm not sure if they would. AFAIK, there's no "directory" option
-    for oXygen editor variables (see:https://www.oxygenxml.com/doc/versions/18.1/ug-author/topics/editor-variables.html) -->
-    <!--    This might be what we need to use: https://www.oxygenxml.com/doc/versions/18.1/ug-author/topics/preferences-custom-editor-variables.html#preferences-custom-editor-variables-->
-    <!--    This might have solved the issue: https://www.oxygenxml.com/forum/topic11034.html-->
+    <path id="jars">
+        <pathelement path="utilities"/>
+        <pathelement location="utilities/saxon9he.jar"/>
+    </path>
+
   <property name="projectDirectory" value="${projectDirectory}"/>
   
   <target name="documentation">
@@ -28,14 +27,30 @@
       </echo>
   </target>
     
+    <target name="runDiagnostics">
+        <description>
+            task: runDiagnostics
+            
+            This task runs the diagnostics suite
+        </description>
+        <echo message="${echo.separator}"/>
+        <echo message="Creating diagnostics output for project: ${projectDirectory}"/>
+        <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
+            <arg value="-s:xsl/diagnostics_master.xsl"/>
+            <arg value="-xsl:xsl/diagnostics_master.xsl"/> 
+            <arg value="projectDirectory=${projectDirectory}"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+    </target>
+ 
     
     <!--Nothing here yet-->
   <target name="all">
-      <echo message="${projectDirectory}"></echo>
+      <echo message="${projectDirectory}"/>
       <description>
           TARGET: all
           This target is the default and runs all the build processes.
       </description>
-
+      <antcall target="runDiagnostics"/>
   </target>
 </project>

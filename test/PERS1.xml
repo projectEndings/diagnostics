@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xml:id="PERS1" version="5.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Test document: Personography</title>
+                
+            </titleStmt>
+            
+            <publicationStmt>
+                <p>This is a test document for the diagnostics project.</p>
+            </publicationStmt>
+            
+            <sourceDesc><p>Born digital.</p></sourceDesc>
+        </fileDesc>
+        <profileDesc>
+            
+        </profileDesc>
+        
+        <encodingDesc>
+            <p>Simple sample encoding of a personography.</p>
+        </encodingDesc>
+        
+        
+        
+    </teiHeader>
+    
+    <text>
+        <front>
+            <docTitle>
+                <titlePart type="main">Sample personography</titlePart>
+            </docTitle>
+        </front>
+        <body>
+          <listPerson>
+              <person xml:id="MH">
+                  <persName>
+                      <name>Martin Holmes</name>
+                  </persName>
+                  <note>Programmer at HCMC, author of <ref target="testDoc.xml">testDoc.xml</ref>.</note>
+              </person>
+              <person xml:id="JT">
+                  <persName>
+                      <name>Joey Takeda</name>
+                  </persName>
+                  <note>Junior Programmer at HCMC, author of <ref target="testDoc.xml#testDoc_div1">the first div of the test document</ref>.</note>
+              </person>
+          </listPerson>
+        </body>
+    </text>
+</TEI>

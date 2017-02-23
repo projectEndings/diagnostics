@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xml:id="testDoc" version="5.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Test document</title>
+               
+            </titleStmt>
+            
+            <publicationStmt>
+               <p>This is a test document for the diagnostics project.</p>
+            </publicationStmt>
+            
+            <sourceDesc><p>Born digital.</p></sourceDesc>
+        </fileDesc>
+        <profileDesc>
+        
+        </profileDesc>
+        
+        <encodingDesc>
+            <p>Simple sample encoding..</p>
+            
+        </encodingDesc>
+        
+     
+       
+    </teiHeader>
+    
+    <text>
+        <front>
+            <docTitle>
+                <titlePart type="main">Sample document.</titlePart>
+            </docTitle>
+        </front>
+        <body>
+            <div xml:id="testDoc_div1">
+                <p>This document was created by <ref target="PERS1.xml#JT">Joey Takeda</ref>and <ref target="PERS1.xml#MH">Martin Holmes</ref> for the <ref target="http://github.com/joeytakeda/diagnostics">diagnostics project</ref>. However, this was not created by <ref target="PERS1.xml#FB">Fred Bloggs</ref>,as he doesn't exist 
+                    and therefore doesn't deserve any credit.</p>
+            </div>
+        </body>
+    </text>
+</TEI>

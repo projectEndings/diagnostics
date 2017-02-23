@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." name="Build Diagnostics Package for GitHub">
+  
+  <description>
+      diagnostics/buildForGit.xml
+      
+      This build is *not* included in the package
+      downloadable from the GitHub repository, but
+      is necessary for constructing the .zip file
+      and creating some of the documents necessary
+      for the GitHub release.
+  </description>
+    
+    
+</project>

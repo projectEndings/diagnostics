@@ -173,6 +173,10 @@
                             </antScenario>
                         </scenario-array>
                     </entry>
+                    <entry>
+                        <String>validation.scenarios</String>
+                        <validationScenario-array/>
+                    </entry>
                 </serializableOrderedMap>
             </serialized>
         </options>

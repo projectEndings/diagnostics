@@ -23,21 +23,31 @@
     
     <xsl:param name="projectDirectory"/>
     
-<!--    Has to made relative since the xsl is being called from a subfolder.-->
-    <xsl:variable name="relativeProjectDirectory" select="concat('../',$projectDirectory)"/>
+<!--    Date for file names.-->
+    <xsl:variable name="currDate" select="current-date()"/>
+    <xsl:variable name="currDateW3C" as="xs:string" select="format-date($currDate, '[Y0001]-[M01]-[D01]')"/>
+ 
+<!-- -->
     <xsl:variable name="projectCollection" select="collection(concat($projectDirectory,'?select=*.xml;recurse=yes'))"/>
     <xsl:variable name="teiDocs" select="$projectCollection//TEI"/>
     
-
+<!--    TODO: This URL regex will need be a bit more sophisticated to capture everything.
+    This is just a placeholder for now.-->
+    
     <xsl:variable name="urlRegex">^http(s)?://</xsl:variable>
+    
+    
     <xsl:key name="declaredIds" match="*/@xml:id" use="normalize-space(concat(hcmc:returnFileName(.),'#',.))"/>
 <!--    <xsl:key name="refs" match="TEI//@target" use="tokenize(.,'\s+')"/>-->
     
     <xsl:template match="/">
         <xsl:message>TESTING</xsl:message>
-        <xsl:result-document href="../test/results.html">
-            <xsl:call-template name="generateStatistics"/>
-            <xsl:call-template name="badInternalLinks"/>
+        <xsl:result-document href="{$projectDirectory}/diagnostics/diagnostics_{$currDateW3C}.html">
+            <html>
+                <xsl:call-template name="generateStatistics"/>
+                <xsl:call-template name="badInternalLinks"/>
+            </html>
+            
         </xsl:result-document>
        
     </xsl:template>

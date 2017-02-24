@@ -1,31 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." name="Diagnostics" default="all">
-  
-  <description>
-      diagnostics/build.xml
-      
-      ANT FILE FOR TEI PROJECT DIAGNOSTICS.
-      
-      See diagnostics/README.txt for instructions
-      on how to run this diagnostics suite.
-      
-      Note that this assume oXygen version 17.0 or
-      higher. 
-      [[Other descriptive things go here]]
-  </description>
-  
+    
+    <description>
+        diagnostics/build.xml
+        
+        ANT FILE FOR TEI PROJECT DIAGNOSTICS.
+        
+        See diagnostics/README.txt for instructions
+        on how to run this diagnostics suite.
+        
+        Note that this assume oXygen version 17.0 or
+        higher. 
+        [[Other descriptive things go here]]
+    </description>
+    
+    
+
     <path id="jars">
         <pathelement path="utilities"/>
         <pathelement location="utilities/saxon9he.jar"/>
     </path>
+    
+    
+    
+<!--    First, if this is a file or a directory-->
+<!--    Then strip things away as necessary-->
+    
+    <!--    user.projectDirectory is an custom editor variable -->
+    
+    <pathconvert property="projectDirectory">
+        <path>
+            <pathelement location="${user.projectDirectory}"/>
+        </path>
+        <mapper type="regexp" from="^(.*:)?(.*)(/|/.*\.[a-zA-Z]+)?^" to="\2/"/>
+    </pathconvert>
+    
+    <!--<available  property="dirExists" file="${projectDirectory}" type="dir" searchparents="false"/>-->
+    
+   
+   
+    
+    
+    
+    <target name="setup">
+        <description>
+            task: setup
+            
+            This task creates a diagnostics directory in the projectFolder.
+        </description>
+        <echo message="Input: ${user.projectDirectory}"/>
+        <echo message="After regex: ${projectDirectory}"/>
+    </target>
 
-  <property name="projectDirectory" value="${projectDirectory}"/>
-  
-  <target name="documentation">
-      <echo>
-          To see detailed documentation for this build [[more here later]].
-      </echo>
-  </target>
     
     <target name="runDiagnostics">
         <description>
@@ -33,6 +59,7 @@
             
             This task runs the diagnostics suite
         </description>
+        
         <echo message="${echo.separator}"/>
         <echo message="Creating diagnostics output for project: ${projectDirectory}"/>
         <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
@@ -42,15 +69,14 @@
             <arg value="--suppressXsltNamespaceCheck:on"/>
         </java>
     </target>
- 
     
-    <!--Nothing here yet-->
-  <target name="all">
-      <echo message="${projectDirectory}"/>
-      <description>
-          TARGET: all
-          This target is the default and runs all the build processes.
-      </description>
-      <antcall target="runDiagnostics"/>
-  </target>
+    
+    <target name="all">
+        <description>
+            TARGET: all
+            This target is the default and runs all the build processes.
+        </description>
+        <antcall target="setup"/>
+        <antcall target="runDiagnostics"/>
+    </target>
 </project>

@@ -22,12 +22,9 @@
     </xd:doc>
     
     <xsl:param name="projectDirectory"/>
-    
-<!--    Date for file names.-->
-    <xsl:variable name="currDate" select="current-date()"/>
-    <xsl:variable name="currDateW3C" as="xs:string" select="format-date($currDate, '[Y0001]-[M01]-[D01]')"/>
- 
-<!-- -->
+    <xsl:param name="outputDirectory"/>
+    <xsl:param name="currDate"/>
+
     <xsl:variable name="projectCollection" select="collection(concat($projectDirectory,'?select=*.xml;recurse=yes'))"/>
     <xsl:variable name="teiDocs" select="$projectCollection//TEI"/>
     
@@ -42,12 +39,11 @@
     
     <xsl:template match="/">
         <xsl:message>TESTING</xsl:message>
-        <xsl:result-document href="{$projectDirectory}/diagnostics/diagnostics_{$currDateW3C}.html">
+        <xsl:result-document href="{$outputDirectory}/diagnostics.html">
             <html>
                 <xsl:call-template name="generateStatistics"/>
                 <xsl:call-template name="badInternalLinks"/>
             </html>
-            
         </xsl:result-document>
        
     </xsl:template>
@@ -121,10 +117,6 @@
                     </div>
                 </xsl:if>
                 </xsl:for-each>
-           
-               
-      
-
     </xsl:template>
     
     <xsl:function name="hcmc:returnFileName" as="xs:string">

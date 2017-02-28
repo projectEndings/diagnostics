@@ -15,31 +15,23 @@
     </description>
     
     
-
-    <path id="jars">
-        <pathelement path="utilities"/>
-        <pathelement location="utilities/saxon9he.jar"/>
-    </path>
-    
-    
-    
-<!--    First, if this is a file or a directory-->
-<!--    Then strip things away as necessary-->
-    
-    <!--    user.projectDirectory is an custom editor variable -->
-    
-    <pathconvert property="projectDirectory">
-        <path>
-            <pathelement location="${user.projectDirectory}"/>
-        </path>
-        <mapper type="regexp" from="^(.*:)?(.*)(/|/.*\.[a-zA-Z]+)?^" to="\2/"/>
-    </pathconvert>
-    
-    <!--<available  property="dirExists" file="${projectDirectory}" type="dir" searchparents="false"/>-->
-    
+    <property value="${user.input}" name="user.input.string"/>
+    <property value="${currDateW3C}" name="date"/>
    
-   
+        
+    <loadresource property="user.input.string.dir">
+        <propertyresource name="user.input.string"/>
+        <filterchain>
+            <tokenfilter>
+                <replaceregex pattern="^([a-zA-Z]+:)?(.*)?$" replace="\2" flags="g"/>
+            </tokenfilter>
+        </filterchain>
+    </loadresource>
     
+    <dirname property="user.projectDirectory" file="${user.input.string.dir}"/>
+    
+<!--    Setting the outputDir for the diagnostics results-->
+    <property name="outputDirectory" value="${user.projectDirectory}/diagnostics_${date}"/>    
     
     
     <target name="setup">
@@ -48,8 +40,16 @@
             
             This task creates a diagnostics directory in the projectFolder.
         </description>
-        <echo message="Input: ${user.projectDirectory}"/>
-        <echo message="After regex: ${projectDirectory}"/>
+        <fail message="Project directory not found. Please check input: ${user.input}">
+            <condition>
+                <not>
+                    <available file="${user.projectDirectory}" type="dir"/>
+                </not>
+            </condition>
+        </fail>
+       <echo message="Executing diagnostics on directory ${user.projectDirectory}"/>
+        <echo message="Creating diagnostics directory: ${outputDirectory}"/>
+        <mkdir dir="${outputDirectory}"/>
     </target>
 
     
@@ -61,11 +61,13 @@
         </description>
         
         <echo message="${echo.separator}"/>
-        <echo message="Creating diagnostics output for project: ${projectDirectory}"/>
+        <echo message="Creating diagnostics output for project: ${user.projectDirectory}"/>
         <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
             <arg value="-s:xsl/diagnostics_master.xsl"/>
             <arg value="-xsl:xsl/diagnostics_master.xsl"/> 
-            <arg value="projectDirectory=${projectDirectory}"/>
+            <arg value="projectDirectory=${user.projectDirectory}"/>
+            <arg value="outputDirectory=${outputDirectory}"/>
+            <arg value="currDate=${date}"/>
             <arg value="--suppressXsltNamespaceCheck:on"/>
         </java>
     </target>

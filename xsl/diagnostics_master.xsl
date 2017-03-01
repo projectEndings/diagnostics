@@ -38,8 +38,10 @@
     <xsl:variable name="urlRegex">^https?://</xsl:variable>
 
 
+    <!--<xsl:key name="declaredIds" match="*/@xml:id"
+        use="normalize-space(concat(hcmc:returnFileName(.), '#', .))"/>-->
     <xsl:key name="declaredIds" match="*/@xml:id"
-        use="normalize-space(concat(hcmc:returnFileName(.), '#', .))"/>
+        use="normalize-space(concat(document-uri(root(.)), '#', .))"/>
     <!--    <xsl:key name="refs" match="TEI//@target" use="tokenize(.,'\s+')"/>-->
 
     <xsl:template match="/">
@@ -73,7 +75,7 @@
     <xsl:template name="generateStatistics">
         <xsl:variable name="teiDocCount" select="count($teiDocs)"/>
         <xsl:variable name="teiDocsDeclaredIdsCount" select="count($teiDocs//*/@xml:id)"/>
-        <xsl:message> TEI doc count: <xsl:value-of select="$teiDocCount"/> XML:ID count:
+        <xsl:message> TEI doc count: <xsl:value-of select="$teiDocCount"/> @xml:id count:
                 <xsl:value-of select="$teiDocsDeclaredIdsCount"/>
         </xsl:message>
     </xsl:template>
@@ -87,9 +89,11 @@
     <xsl:template name="badInternalLinks">
 
         <!--        <xsl:variable name="temp" as="xs:string*">-->
-        <xsl:for-each select="$teiDocs[//@target][position() lt 70]">
+        <xsl:for-each select="$teiDocs[descendant::*[@target]][position() lt 76]">
             <xsl:variable name="thisDoc" select="."/>
-            <xsl:variable name="thisDocId" select="@xml:id"/>
+            <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
+<!--    We can't assume documents have ids on their root elements.        -->
+            <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
             <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
             <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
                     select="position()"/>/<xsl:value-of select="count($teiDocs[//@target])"
@@ -104,25 +108,38 @@
 
                     <!--None of the target tokens should start with a hash,
                 since they should be referenced in the file already
-                and should already be checked by schematron.-->
+                and should already be checked by schematron. NOTE: 
+                MDH says we should reverse this decision and check them too.    -->
                     <xsl:variable name="itemsFound">
                         
                         <xsl:for-each
-                            select="$thisTargTokens[not(starts-with(., '#'))][not(matches(., $urlRegex))]">
+                            select="$thisTargTokens[contains(., '#')][not(matches(., $urlRegex))]">
                             <xsl:variable name="thisToken" select="normalize-space(.)" as="xs:string"/>
     
-                            <!--Since we're using the declaredIds key, we don't need to know
-                    the absolute path for the token, just the filename and hash. -->
+                            <!--Joey says: Since we're using the declaredIds key, we don't need to know
+                    the absolute path for the token, just the filename and hash. 
+                                Martin says: unfortunately not so. Filepaths are relative to the 
+                                containing document, so all filepaths need to be resolved in order
+                                to be checked. -->
+                            <xsl:variable name="targetDoc" select="if (matches($thisToken, '.+#')) then resolve-uri(substring-before($thisToken, '#'), $thisDocUri) else if (matches($thisToken, '^#')) then $thisDocUri else ''"/>
+                            <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
+                            <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
+                            
+                            <!--<xsl:message>Found this target:</xsl:message>
+                            <xsl:message><xsl:value-of select="$fullTarget"/></xsl:message>-->
     
-                            <xsl:variable name="pathlessToken"
+                            <!--<xsl:variable name="pathlessToken"
                                 select="tokenize($thisToken, '/')[last()]"/>
                             <xsl:variable name="thisTokenAfterHash"
                                 select="normalize-space(substring-after($pathlessToken, '#'))"
-                                as="xs:string"/>
+                                as="xs:string"/>-->
     
                             <xsl:choose>
-                                <xsl:when test="$teiDocs//key('declaredIds', $pathlessToken)">
-                                    <!-- <xsl:message>Found id for <xsl:value-of select="."/></xsl:message>-->
+                                <xsl:when test="$teiDocs//key('declaredIds', $fullTarget)">
+                                     <xsl:message>Found id for <xsl:value-of select="."/></xsl:message>
+                                </xsl:when>
+                                <xsl:when test="doc-available($fullTarget)">
+                                    <xsl:message>Found document for target.</xsl:message>
                                 </xsl:when>
                                 <xsl:otherwise>
                                     <li>

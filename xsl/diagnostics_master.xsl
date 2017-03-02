@@ -43,24 +43,35 @@
         select="collection(concat($projectDirectory, '?select=*.xml;recurse=yes'))"/>
     <xsl:variable name="teiDocs" select="$projectCollection//TEI"/>
 
-    <!--    TODO: This URL regex will need be a bit more sophisticated to capture everything.
-    This is just a placeholder for now.-->
+    <xd:doc scope="component">
+        <xd:desc>Although we check all attributes, there are some that we absolutely
+        must explicitly exclude because they're bound to look like links and are 
+        definitely not.</xd:desc>
+    </xd:doc>
+    <xsl:variable name="excludedAtts" select="('matchPattern', 'replacementPattern')"/>
     
 <!--    TODO: Create template for creating diagnostics checks divs, so that
     this document is easily expandable (following the model of Moses/MoEML diagnostics.-->
 
-    <xsl:variable name="urlRegex">^https?://</xsl:variable>
-
-
-    <!--<xsl:key name="declaredIds" match="*/@xml:id"
-        use="normalize-space(concat(hcmc:returnFileName(.), '#', .))"/>-->
+    <xd:doc scope="component">
+        <xd:desc>This key indexes all @xml:id attributes that might be pointed at
+        using a fully-expanded path to their container document followed by '#[id]'.
+        When idrefs are encountered in documents, they too are fully expanded before
+        being checked against the key. If there's no match in the key, presumably 
+        the idref is wrong.</xd:desc>
+    </xd:doc>
     <xsl:key name="declaredIds" match="*/@xml:id"
         use="normalize-space(concat(document-uri(root(.)), '#', .))"/>
-    <!--    <xsl:key name="refs" match="TEI//@target" use="tokenize(.,'\s+')"/>-->
     
-
+    <xd:doc scope="component">
+        <xd:desc>This key is used to index all prefixDefs in a project so that 
+            their expansion regexes can be retrieved and used easily.
+        </xd:desc>
+    </xd:doc>
+    <xsl:key name="prefixDefs" match="prefixDef" use="@ident"/>
+    
     <xsl:template match="/">
-        <xsl:message>TESTING</xsl:message>
+        <xsl:message>Running diagnostics...</xsl:message>
         <xsl:result-document href="{$outputDirectory}/diagnostics.html">
             <xsl:text disable-output-escaping="yes">&lt;!DOCTYPE html&gt;
             </xsl:text>
@@ -109,8 +120,7 @@
                 </tbody>
             </table>
         </div>
-        <xsl:message> TEI doc count: <xsl:value-of select="$teiDocCount"/> @xml:id count:
-                <xsl:value-of select="$teiDocsDeclaredIdsCount"/>
+        <xsl:message>TEI doc count: <xsl:value-of select="$teiDocCount"/>&#x0a;@xml:id count: <xsl:value-of select="$teiDocsDeclaredIdsCount"/>
         </xsl:message>
     </xsl:template>
     
@@ -144,13 +154,12 @@
             <xd:ref name="badInternalLinks" type="template"/>
             <xd:p>template: badInternalLinks</xd:p>
             <xd:p>This template checks that all internal targets are pointing to a declared entity
-                declared somewhere in the project. It assumes that any locally declared targets are
-                validated by tei_all.sch.</xd:p>
+                declared somewhere in the project.</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:template name="badInternalLinks">
         <xsl:variable name="output">
-            <xsl:for-each select="$teiDocs[descendant::*[@*]][position() lt 76]">
+            <xsl:for-each select="$teiDocs[descendant::*[@*]]">
                 <xsl:variable name="thisDoc" select="."/>
                 <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
     <!--    We can't assume documents have ids on their root elements.        -->
@@ -160,7 +169,7 @@
                         select="position()"/>/<xsl:value-of select="count($teiDocs[//@target])"
                     />)</xsl:message>
                 <xsl:variable name="temp" as="element()*">
-                    <xsl:for-each select="//@*">
+                    <xsl:for-each select="//@*[not(local-name(.) = $excludedAtts)]">
                         <xsl:variable name="thisAtt" select="."/>
                         <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
                             as="xs:string"/>
@@ -173,13 +182,17 @@
                     MDH says we should reverse this decision and check them too.    -->
                         <xsl:variable name="itemsFound">
                             
-                            <xsl:for-each
-                                select="$thisAttTokens">
-                                <xsl:if test="hcmc:isLocalPointer(.)">
+                            <xsl:for-each select="$thisAttTokens">
+                                <!-- Is it a private URI scheme? We use the regex from the TEI 
+                                     definition of teidata.prefix. If it is one, resolve it 
+                                     before continuing. -->
+                                <xsl:variable name="thisToken" select="if (matches(., '^[a-z][a-z0-9\+\.\-]*:[^/]+')) then hcmc:resolvePrefixDef(.) else ." as="xs:string"/>
+                                
+                                <xsl:if test="hcmc:isLocalPointer($thisToken)">
                                     
                                     <!-- At this point we need to resolve private URI schemes. 
                                          Leave that aside for the moment. -->
-                                    <xsl:variable name="thisToken" select="normalize-space(.)" as="xs:string"/>
+                                    
         
                                     <!-- Filepaths are relative to the containing document, so all 
                                          filepaths need to be resolved in order to be checked. -->
@@ -200,8 +213,8 @@
                                             <!--<xsl:message>Found document for target.</xsl:message>-->
                                         </xsl:when>
                                         <xsl:otherwise>
-                                            <li><span class="attName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
-                                                <span class="attVal"><xsl:value-of select="."/></span>
+                                            <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
+                                                <span class="xmlAttVal"><xsl:value-of select="."/></span>
                                             </li>
                                         </xsl:otherwise>
                                     </xsl:choose>
@@ -238,10 +251,13 @@
     </xsl:template>
     
     <xd:doc scope="component">
-        <xd:desc>This function takes a string input and tries to determine
+        <xd:desc>
+            <xd:ref name="hcmc:isLocalPointer" type="function"/>
+            <xd:p>This function takes a string input and tries to determine
         whether it's the sort of internal reference link that we want to check.
         We do this because we cannot easily determine what kinds of attribute 
-        values can or should contain pointers.</xd:desc>
+        values can or should contain pointers.</xd:p>
+        </xd:desc>
     </xd:doc>
     <xsl:function name="hcmc:isLocalPointer" as="xs:boolean">
         <xsl:param as="xs:string" name="token"/>
@@ -249,11 +265,6 @@
 <!-- Exclude external schemes first. Crude but I think it should work.-->
             <xsl:when test="matches($token, '^[A-Za-z][A-Za-z\d\.\+\-]+://')">
                 <xsl:value-of select="false()"/>
-            </xsl:when>
-<!-- Is it a private URI scheme? We use the regex from the TEI 
-     definition of teidata.prefix. -->
-            <xsl:when test="matches($token, '^[a-z][a-z0-9\+\.\-]*:[^/]+')">
-                <xsl:value-of select="true()"/>
             </xsl:when>
 <!-- Is it a direct link to a document? We assume that a document has
      an extension of up to six characters. -->
@@ -268,6 +279,28 @@
             <xsl:otherwise>
                 <xsl:value-of select="false()"/>
             </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="hcmc:resolvePrefixDef" type="function"/>
+            <xd:p>This function tries to look up a prefixDef by 
+            prefix for the apparent prefix component of a pointer;
+            if it finds a prefixDef, it does the replacement, but
+            otherwise it returns the string unchanged.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:function name="hcmc:resolvePrefixDef" as="xs:string">
+        <xsl:param name="token" as="xs:string"/>
+        <xsl:variable name="prefix" select="substring-before($token, ':')"/>
+        <xsl:variable name="prefixDef" select="$teiDocs//key('prefixDefs', $prefix)"/>
+        <xsl:choose>
+            <xsl:when test="$prefixDef">
+                <!--<xsl:message>prefixDef: <xsl:value-of select="concat($prefixDef[1]/@ident, ', ', $prefixDef[1]/@matchPattern, ', ', $prefixDef[1]/@replacementPattern)"/></xsl:message>-->
+                <xsl:value-of select="replace(substring-after($token, ':'), $prefixDef[@matchPattern][1]/@matchPattern, $prefixDef[@matchPattern][1]/@replacementPattern)"/>
+            </xsl:when>
+            <xsl:otherwise><xsl:value-of select="$token"/></xsl:otherwise>
         </xsl:choose>
     </xsl:function>
     
@@ -298,176 +331,17 @@
     
     <xsl:variable name="javascript">
         <script type="text/javascript" xmlns="http://www.w3.org/1999/xhtml">
-            <![CDATA[
- 
- 
- if (window.addEventListener) window.addEventListener('load', init, false)
-else if (window.attachEvent) window.attachEvent('onload', init);
-
-
-function init(){
- var url = window.location.href;
- var n = url.lastIndexOf('#');
- var hashDiv = url.substring(n+1);
- var div = document.getElementById(hashDiv);
- if (div !== null){ 
- div.setAttribute('class', 'showing');
-}
-}
-            
-                         
-            function showHide(sender){
-              var div = sender.parentNode;
-             
-              if (div.getAttribute('class') == 'hidden'){
-                div.setAttribute('class', 'showing');
-              }
-              else{
-                div.setAttribute('class', 'hidden');
-              }
-            }
-          ]]>
+          <xsl:text>&lt;![CDATA[</xsl:text>
+            <xsl:value-of select="unparsed-text('script.js')"/>
+          <xsl:text>]]&gt;</xsl:text>
         </script>
     </xsl:variable>
     
 <!-- We should store this externally and pull it in with unparsed-text().   -->
     <xsl:variable name="css">
         <style type="text/css" xmlns="http://www.w3.org/1999/xhtml">
-            <xsl:comment>
-          body{
-            font-family: georgia;
-            font-size: 100%;
-            margin: 1em 15%;
-            color: #505050;
-          }
-          div{
-            padding: 0;
-            margin: 1em;
-          }
-          body > div, body > div > div{
-            border: solid 1px gray;
-          }
-          div.explanation{
-            font-style: italic;
-          }
-          h2, h3, h4{
-            padding: 0.25em;
-            margin: 0 0 1em 0;
-            color: #000000;
-          }
-          h2{
-            border-color: #ccccff #000066 #000066 #ccccff;
-            border-width: 0.1em;
-            border-style: solid;
-            background-color: #aaaaff;
-            
-          }
-         
-          h3.complete {
-          background-color: rgba(27, 152, 27,.5);
-          }
-          
-          h3.toDo {
-          background-color: rgba(249, 21, 47,.86);
-          }
-          
-          div.hidden > *{
-            display: none;
-          }
-          div.showing > * {
-            display: block;
-          }
-          div.hidden > h3{
-            display: block;
-            cursor: pointer;
-          }
-          div.showing > h3{
-            cursor: pointer;
-          }
-          div.hidden > h3:after{
-            content: " ▶";
-          }
-          div.showing > h3:after{
-            content: " ▼";
-          }
-          div.hidden > h2{
-            display: block;
-            cursor: pointer;
-          }
-          div.showing > h2{
-            cursor: pointer;
-          }
-          div.hidden > h2:after{
-            content: " ▶";
-          }
-          div.showing > h2:after{
-            content: " ▼";
-          }
-          p{
-            margin: 0.25em;
-          }
-          ul{
-            margin-top: 1em;
-            marin-bottom: 0.5em;
-          }
-          li{
-            margin-top: 0.5em;
-          }
-          span.fileName{
-            font-family: monospace;
-            color: #000099;
-            font-size: 120%;
-          }
-          table{
-            margin: 1em;
-            border: solid 1px gray;
-            border-collapse: collapse;
-          }
-          thead > tr > td {
-              font-weight:bold;
-              }
-          td{
-            padding: 0.5em;
-            border: solid 1px gray;
-          }
-          td + td{
-            text-align: right;
-          }
-          td {
-          font-size: 110%;
-          }
-          .xmlTag, .xmlAttName, .xmlAttVal, .teiCode{
-          font-family: monospace;
-          font-variant: normal;
-          }
-          .xmlTag, .xmlAttName, .xmlAttVal{
-          font-weight: bold;
-          }
-          .xmlTag{
-          color: #000099;
-          }
-          
-          .xmlAttName{
-          color: #f5844c;
-          }
-          .xmlAttVal{
-          color: #993300;
-          }
-
-          .brokenLink{
-          color: rgb(249, 21, 47);
-          font-weight:bold;
-          }
-          
-          .movedLink{
-          font-style:italic;
-          }
-          
-          .timestamp{
-            font-size:80%;
-            text-align:center;
-            }
-            
+          <xsl:comment>
+            <xsl:value-of select="unparsed-text('style.css')"/>
           </xsl:comment>
         </style>
     </xsl:variable>

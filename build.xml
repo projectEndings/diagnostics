@@ -14,7 +14,7 @@
         [[Other descriptive things go here]]
     </description>
     
-    
+    <property name="echo.separator" value="*********************************************"/>
     <property value="${user.input}" name="user.input.string"/>
     <property value="${currDateW3C}" name="date"/>
     

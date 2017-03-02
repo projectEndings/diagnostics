@@ -1,0 +1,146 @@
+/* CSS styling for the HTML report page. */
+
+body{
+    font-family: georgia;
+    font-size: 100%;
+    margin: 1em 15%;
+    color: #505050;
+}
+div{
+    padding: 0;
+    margin: 1em;
+}
+body > div,
+body > div > div{
+    border: solid 1px gray;
+}
+div.explanation{
+    font-style: italic;
+}
+h2,
+h3,
+h4{
+    padding: 0.25em;
+    margin: 0 0 1em 0;
+    color: #000000;
+}
+h2{
+    border-color: #ccccff #000066 #000066 #ccccff;
+    border-width: 0.1em;
+    border-style: solid;
+    background-color: #aaaaff;
+
+}
+
+h3.complete{
+    background-color: rgba(27, 152, 27, .5);
+}
+
+h3.toDo{
+    background-color: rgba(249, 21, 47, .86);
+}
+
+div.hidden > *{
+    display: none;
+}
+div.showing > *{
+    display: block;
+}
+div.hidden > h3{
+    display: block;
+    cursor: pointer;
+}
+div.showing > h3{
+    cursor: pointer;
+}
+div.hidden > h3:after{
+    content: " ▶";
+}
+div.showing > h3:after{
+    content: " ▼";
+}
+div.hidden > h2{
+    display: block;
+    cursor: pointer;
+}
+div.showing > h2{
+    cursor: pointer;
+}
+div.hidden > h2:after{
+    content: " ▶";
+}
+div.showing > h2:after{
+    content: " ▼";
+}
+p{
+    margin: 0.25em;
+}
+ul{
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+li{
+    margin-top: 0.5em;
+}
+span.fileName{
+    font-family: monospace;
+    color: #000099;
+    font-size: 120%;
+}
+table{
+    margin: 1em;
+    border: solid 1px gray;
+    border-collapse: collapse;
+}
+thead > tr > td{
+    font-weight: bold;
+}
+td{
+    padding: 0.5em;
+    border: solid 1px gray;
+}
+td + td{
+    text-align: right;
+}
+td{
+    font-size: 110%;
+}
+.xmlTag,
+.xmlAttName,
+.xmlAttVal,
+.teiCode{
+    font-family: monospace;
+    font-variant: normal;
+}
+.xmlTag,
+.xmlAttName,
+.xmlAttVal{
+    font-weight: bold;
+}
+.xmlTag{
+    color: #000099;
+}
+
+.xmlAttName{
+    color: #f5844c;
+}
+.xmlAttVal{
+    color: #993300;
+}
+.xmlAttName:before{
+    content: "@";
+}
+
+.brokenLink{
+    color: rgb(249, 21, 47);
+    font-weight: bold;
+}
+
+.movedLink{
+    font-style: italic;
+}
+
+.timestamp{
+    font-size: 80%;
+    text-align: center;
+}

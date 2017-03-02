@@ -20,6 +20,10 @@
         <encodingDesc>
             <p>Simple sample encoding..</p>
             
+            <listPrefixDef>
+                <prefixDef ident="pers" matchPattern="(.+)" replacementPattern="PERS1.xml#$1"/>
+            </listPrefixDef>
+            
         </encodingDesc>
         
      
@@ -36,6 +40,11 @@
             <div xml:id="testDoc_div1">
                 <p>This document was created by <ref target="PERS1.xml#JT">Joey Takeda</ref>and <ref target="PERS1.xml#MH">Martin Holmes</ref> for the <ref target="http://github.com/projectEndings/diagnostics">diagnostics project</ref>. However, this was not created by <ref target="PERS1.xml#FB">Fred Bloggs</ref>,as he doesn't exist 
                     and therefore doesn't deserve any credit.</p>
+                
+                <p>We'll also mention <ref target="pers:JT">Joey Takeda</ref> again, but this time
+                    using a private URI scheme, and then another non-entity, <ref target="PERS1.xml#JB">Joe Bloggs</ref>.</p>
+                <p>We should also probably namecheck <name ref="pers:MH">Martin</name> again using 
+                a different attribute, and non-existent <name ref="pers:FB">Fred</name> too.</p>
             </div>
         </body>
     </text>

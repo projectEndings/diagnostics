@@ -19,6 +19,9 @@
         
         <encodingDesc>
             <p>Simple sample encoding of a personography.</p>
+            
+            
+            
         </encodingDesc>
         
         
@@ -45,6 +48,15 @@
                   </persName>
                   <note>Junior Programmer at HCMC, author of <ref target="testDoc.xml#testDoc_div1">the first div of the test document</ref>.</note>
               </person>
+              <personGrp xml:id="diagnosticsTeam">
+                  <persName corresp="#JT"/>
+                  <persName corresp="#MH"/>
+              </personGrp>
+              <personGrp xml:id="nonEntities">
+                  <persName corresp="#FB"/>
+                  <persName corresp="#JB"/>
+              </personGrp>
+              <personGrp xml:id="nobodies" corresp="pers:NB1 pers:NB2"/>
           </listPerson>
         </body>
     </text>

@@ -56,8 +56,7 @@
     
     <target name="setup">
         <description>
-            task: setup
-            
+            TARGET: setup
             This task creates a diagnostics directory in the projectFolder.
         </description>
         <fail message="Project directory not found. Please check input: ${user.input}">
@@ -75,9 +74,8 @@
     
     <target name="runDiagnostics">
         <description>
-            task: runDiagnostics
-            
-            This task runs the diagnostics suite
+            TARGET: runDiagnostics
+            This task runs the diagnostics suite.
         </description>
         
         <echo message="${echo.separator}"/>

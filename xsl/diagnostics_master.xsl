@@ -149,92 +149,92 @@
         </xd:desc>
     </xd:doc>
     <xsl:template name="badInternalLinks">
-
-        <!--        <xsl:variable name="temp" as="xs:string*">-->
-        <xsl:for-each select="$teiDocs[descendant::*[@*]][position() lt 76]">
-            <xsl:variable name="thisDoc" select="."/>
-            <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
-<!--    We can't assume documents have ids on their root elements.        -->
-            <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
-            <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
-            <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
-                    select="position()"/>/<xsl:value-of select="count($teiDocs[//@target])"
-                />)</xsl:message>
-            <xsl:variable name="temp" as="element()*">
-                <xsl:for-each select="//@*">
-                    <xsl:variable name="thisAtt" select="."/>
-                    <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
-                        as="xs:string"/>
-                    <xsl:variable name="thisAttTokens" select="tokenize($thisAttString, '\s+')"
-                        as="xs:string+"/>
-
-                    <!--None of the target tokens should start with a hash,
-                since they should be referenced in the file already
-                and should already be checked by schematron. NOTE: 
-                MDH says we should reverse this decision and check them too.    -->
-                    <xsl:variable name="itemsFound">
-                        
-                        <xsl:for-each
-                            select="$thisAttTokens">
-                            <xsl:if test="hcmc:isLocalPointer(.)">
-                                
-                                <!-- At this point we need to resolve private URI schemes. 
-                                     Leave that aside for the moment. -->
-                                <xsl:variable name="thisToken" select="normalize-space(.)" as="xs:string"/>
+        <xsl:variable name="output">
+            <xsl:for-each select="$teiDocs[descendant::*[@*]][position() lt 76]">
+                <xsl:variable name="thisDoc" select="."/>
+                <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
+    <!--    We can't assume documents have ids on their root elements.        -->
+                <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
+                <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
+                <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
+                        select="position()"/>/<xsl:value-of select="count($teiDocs[//@target])"
+                    />)</xsl:message>
+                <xsl:variable name="temp" as="element()*">
+                    <xsl:for-each select="//@*">
+                        <xsl:variable name="thisAtt" select="."/>
+                        <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
+                            as="xs:string"/>
+                        <xsl:variable name="thisAttTokens" select="tokenize($thisAttString, '\s+')"
+                            as="xs:string+"/>
     
-                                <!--Joey says: Since we're using the declaredIds key, we don't need to know
-                                    the absolute path for the token, just the filename and hash. 
-                                    Martin says: unfortunately not so. Filepaths are relative to the 
-                                    containing document, so all filepaths need to be resolved in order
-                                    to be checked. -->
-                                <xsl:variable name="targetDoc" select="
-                                    if (matches($thisToken, '.+#'))
-                                    then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
-                                    else if (matches($thisToken, '^#'))
-                                    then $thisDocUri else ''"/>
-                                
-                                <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
-                                <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
-        
-                                <xsl:choose>
-                                    <xsl:when test="$teiDocs//key('declaredIds', $fullTarget)">
-                                         <xsl:message>Found id for <xsl:value-of select="."/></xsl:message>
-                                    </xsl:when>
-                                    <xsl:when test="doc-available($fullTarget)">
-                                        <xsl:message>Found document for target.</xsl:message>
-                                    </xsl:when>
-                                    <xsl:otherwise>
-                                        <li>
-                                            <xsl:value-of select="."/>
-                                        </li>
-                                    </xsl:otherwise>
-                                </xsl:choose>
-                            </xsl:if>
+                        <!--None of the target tokens should start with a hash,
+                    since they should be referenced in the file already
+                    and should already be checked by schematron. NOTE: 
+                    MDH says we should reverse this decision and check them too.    -->
+                        <xsl:variable name="itemsFound">
                             
-                        </xsl:for-each>
-                    </xsl:variable>
-                    <xsl:if test="$itemsFound//*:li">
-                        <ul>
-                            <xsl:sequence select="$itemsFound"/>
-                        </ul>
-                    </xsl:if>
-                </xsl:for-each>
-                
-            </xsl:variable>
-            <xsl:if test="count($temp) gt 0">
-<!--                <div>-->
-<!--                    <h2>-->
-                <ul>
-                    <li><xsl:value-of select="$thisDocFileName"/>
-                        <xsl:sequence select="$temp"/>
-                    </li>
-                </ul>
-                
-                    <!--</h2>-->
+                            <xsl:for-each
+                                select="$thisAttTokens">
+                                <xsl:if test="hcmc:isLocalPointer(.)">
+                                    
+                                    <!-- At this point we need to resolve private URI schemes. 
+                                         Leave that aside for the moment. -->
+                                    <xsl:variable name="thisToken" select="normalize-space(.)" as="xs:string"/>
+        
+                                    <!-- Filepaths are relative to the containing document, so all 
+                                         filepaths need to be resolved in order to be checked. -->
+                                    <xsl:variable name="targetDoc" select="
+                                        if (matches($thisToken, '.+#'))
+                                        then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
+                                        else if (matches($thisToken, '^#'))
+                                        then $thisDocUri else ''"/>
+                                    
+                                    <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
+                                    <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
+            
+                                    <xsl:choose>
+                                        <xsl:when test="$teiDocs//key('declaredIds', $fullTarget)">
+                                             <!--<xsl:message>Found id for <xsl:value-of select="."/></xsl:message>-->
+                                        </xsl:when>
+                                        <xsl:when test="doc-available($fullTarget)">
+                                            <!--<xsl:message>Found document for target.</xsl:message>-->
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <li><span class="attName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
+                                                <span class="attVal"><xsl:value-of select="."/></span>
+                                            </li>
+                                        </xsl:otherwise>
+                                    </xsl:choose>
+                                </xsl:if>
+                                
+                            </xsl:for-each>
+                        </xsl:variable>
+                        <xsl:if test="$itemsFound//*:li">
+                            <ul>
+                                <xsl:sequence select="$itemsFound"/>
+                            </ul>
+                        </xsl:if>
+                    </xsl:for-each>
                     
-                <!--</div>-->
-            </xsl:if>
-        </xsl:for-each>
+                </xsl:variable>
+                <xsl:if test="count($temp) gt 0">
+    
+                    <ul>
+                        <li><xsl:value-of select="$thisDocFileName"/>
+                            <xsl:sequence select="$temp"/>
+                        </li>
+                    </ul>
+                    
+                </xsl:if>
+            </xsl:for-each>
+        </xsl:variable>
+        <xsl:if test="$output//*:ul">
+            <div>
+                <h3>Links within the project to targets which 
+                    don't seem to exist</h3>
+                <xsl:sequence select="$output"/>
+            </div>
+        </xsl:if>
     </xsl:template>
     
     <xd:doc scope="component">
@@ -261,8 +261,7 @@
                 <xsl:value-of select="true()"/>
             </xsl:when>
 <!-- Does it end with a hash followed by a QName? Regex is based on XML Schema
-                XML Character Classes \i and \c.
-            -->
+                XML Character Classes \i and \c. -->
             <xsl:when test="matches($token, '#\i\c*')">
                 <xsl:value-of select="true()"/>
             </xsl:when>

@@ -35,6 +35,10 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
 
+    <xd:doc scope="component">
+        <xd:desc>We use the project directory to create a collection of all the 
+        XML documents in it. We'll process all of those documents.</xd:desc>
+    </xd:doc>
     <xsl:variable name="projectCollection"
         select="collection(concat($projectDirectory, '?select=*.xml;recurse=yes'))"/>
     <xsl:variable name="teiDocs" select="$projectCollection//TEI"/>
@@ -147,7 +151,7 @@
     <xsl:template name="badInternalLinks">
 
         <!--        <xsl:variable name="temp" as="xs:string*">-->
-        <xsl:for-each select="$teiDocs[descendant::*[@target]][position() lt 76]">
+        <xsl:for-each select="$teiDocs[descendant::*[@*]][position() lt 76]">
             <xsl:variable name="thisDoc" select="."/>
             <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
 <!--    We can't assume documents have ids on their root elements.        -->
@@ -157,11 +161,11 @@
                     select="position()"/>/<xsl:value-of select="count($teiDocs[//@target])"
                 />)</xsl:message>
             <xsl:variable name="temp" as="element()*">
-                <xsl:for-each select="//@target">
-                    <xsl:variable name="thisTarg" select="." as="attribute(target)"/>
-                    <xsl:variable name="thisTargString" select="normalize-space($thisTarg)"
+                <xsl:for-each select="//@*">
+                    <xsl:variable name="thisAtt" select="."/>
+                    <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
                         as="xs:string"/>
-                    <xsl:variable name="thisTargTokens" select="tokenize($thisTargString, '\s+')"
+                    <xsl:variable name="thisAttTokens" select="tokenize($thisAttString, '\s+')"
                         as="xs:string+"/>
 
                     <!--None of the target tokens should start with a hash,
@@ -171,45 +175,42 @@
                     <xsl:variable name="itemsFound">
                         
                         <xsl:for-each
-                            select="$thisTargTokens[contains(., '#')][not(matches(., $urlRegex))]">
-                            <xsl:variable name="thisToken" select="normalize-space(.)" as="xs:string"/>
+                            select="$thisAttTokens">
+                            <xsl:if test="hcmc:isLocalPointer(.)">
+                                
+                                <!-- At this point we need to resolve private URI schemes. 
+                                     Leave that aside for the moment. -->
+                                <xsl:variable name="thisToken" select="normalize-space(.)" as="xs:string"/>
     
-                            <!--Joey says: Since we're using the declaredIds key, we don't need to know
-                    the absolute path for the token, just the filename and hash. 
-                                Martin says: unfortunately not so. Filepaths are relative to the 
-                                containing document, so all filepaths need to be resolved in order
-                                to be checked. -->
-                            <xsl:variable name="targetDoc" select="
-                                if (matches($thisToken, '.+#'))
-                                then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
-                                else if (matches($thisToken, '^#'))
-                                then $thisDocUri else ''"/>
+                                <!--Joey says: Since we're using the declaredIds key, we don't need to know
+                                    the absolute path for the token, just the filename and hash. 
+                                    Martin says: unfortunately not so. Filepaths are relative to the 
+                                    containing document, so all filepaths need to be resolved in order
+                                    to be checked. -->
+                                <xsl:variable name="targetDoc" select="
+                                    if (matches($thisToken, '.+#'))
+                                    then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
+                                    else if (matches($thisToken, '^#'))
+                                    then $thisDocUri else ''"/>
+                                
+                                <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
+                                <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
+        
+                                <xsl:choose>
+                                    <xsl:when test="$teiDocs//key('declaredIds', $fullTarget)">
+                                         <xsl:message>Found id for <xsl:value-of select="."/></xsl:message>
+                                    </xsl:when>
+                                    <xsl:when test="doc-available($fullTarget)">
+                                        <xsl:message>Found document for target.</xsl:message>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <li>
+                                            <xsl:value-of select="."/>
+                                        </li>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+                            </xsl:if>
                             
-                            <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
-                            <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
-                            
-                            <!--<xsl:message>Found this target:</xsl:message>
-                            <xsl:message><xsl:value-of select="$fullTarget"/></xsl:message>-->
-    
-                            <!--<xsl:variable name="pathlessToken"
-                                select="tokenize($thisToken, '/')[last()]"/>
-                            <xsl:variable name="thisTokenAfterHash"
-                                select="normalize-space(substring-after($pathlessToken, '#'))"
-                                as="xs:string"/>-->
-    
-                            <xsl:choose>
-                                <xsl:when test="$teiDocs//key('declaredIds', $fullTarget)">
-                                     <xsl:message>Found id for <xsl:value-of select="."/></xsl:message>
-                                </xsl:when>
-                                <xsl:when test="doc-available($fullTarget)">
-                                    <xsl:message>Found document for target.</xsl:message>
-                                </xsl:when>
-                                <xsl:otherwise>
-                                    <li>
-                                        <xsl:value-of select="."/>
-                                    </li>
-                                </xsl:otherwise>
-                            </xsl:choose>
                         </xsl:for-each>
                     </xsl:variable>
                     <xsl:if test="$itemsFound//*:li">
@@ -237,6 +238,41 @@
     </xsl:template>
     
     <xd:doc scope="component">
+        <xd:desc>This function takes a string input and tries to determine
+        whether it's the sort of internal reference link that we want to check.
+        We do this because we cannot easily determine what kinds of attribute 
+        values can or should contain pointers.</xd:desc>
+    </xd:doc>
+    <xsl:function name="hcmc:isLocalPointer" as="xs:boolean">
+        <xsl:param as="xs:string" name="token"/>
+        <xsl:choose>
+<!-- Exclude external schemes first. Crude but I think it should work.-->
+            <xsl:when test="matches($token, '^[A-Za-z][A-Za-z\d\.\+\-]+://')">
+                <xsl:value-of select="false()"/>
+            </xsl:when>
+<!-- Is it a private URI scheme? We use the regex from the TEI 
+     definition of teidata.prefix. -->
+            <xsl:when test="matches($token, '^[a-z][a-z0-9\+\.\-]*:[^/]+')">
+                <xsl:value-of select="true()"/>
+            </xsl:when>
+<!-- Is it a direct link to a document? We assume that a document has
+     an extension of up to six characters. -->
+            <xsl:when test="matches($token, '[^\.]+\.[^\.]{1,6}$')">
+                <xsl:value-of select="true()"/>
+            </xsl:when>
+<!-- Does it end with a hash followed by a QName? Regex is based on XML Schema
+                XML Character Classes \i and \c.
+            -->
+            <xsl:when test="matches($token, '#\i\c*')">
+                <xsl:value-of select="true()"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="false()"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+    
+    <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="hcmc:returnFileName" type="function"/>
             <xd:p>Takes in any node and returns the root file name
@@ -256,7 +292,10 @@
     
     
 <!--    HTML HEADER VARIABLES (TAKEN FROM THE MAP OF EARLY MODERN LONDON)-->
-<!--    Joey to Martin: Should we have a globals module for these sorts of things?-->
+<!--    Joey to Martin: Should we have a globals module for these sorts of things?
+        Martin to Joey: I think we should store these in external CSS and JS 
+        files and pull them in with unparsed-text(). That will make it easier
+        for people to modify them. -->
     
     <xsl:variable name="javascript">
         <script type="text/javascript" xmlns="http://www.w3.org/1999/xhtml">
@@ -292,6 +331,7 @@ function init(){
         </script>
     </xsl:variable>
     
+<!-- We should store this externally and pull it in with unparsed-text().   -->
     <xsl:variable name="css">
         <style type="text/css" xmlns="http://www.w3.org/1999/xhtml">
             <xsl:comment>

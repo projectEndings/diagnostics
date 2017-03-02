@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project version="16.1">
+<project version="18.1">
     <meta>
         <filters directoryPatterns="" filePatterns="diagnostics.xpr" positiveFilePatterns="" showHiddenFiles="false"/>
         <options>
-            <serialized version="16.1" xml:space="preserve">
+            <serialized version="18.1" xml:space="preserve">
                 <serializableOrderedMap>
                     <entry>
                         <String>scenario.associations</String>
@@ -42,29 +42,6 @@
                                     <list>
                                         <antParameter>
                                             <field name="name">
-                                                <String>currDateW3C</String>
-                                            </field>
-                                            <field name="description">
-                                                <String></String>
-                                            </field>
-                                            <field name="value">
-                                                <String>${date(yyyy-MM-dd)}</String>
-                                            </field>
-                                            <field name="defaultValue">
-                                                <null/>
-                                            </field>
-                                            <field name="type">
-                                                <Integer>5</Integer>
-                                            </field>
-                                            <field name="isPredefined">
-                                                <Boolean>false</Boolean>
-                                            </field>
-                                            <field name="possibleValues">
-                                                <null/>
-                                            </field>
-                                        </antParameter>
-                                        <antParameter>
-                                            <field name="name">
                                                 <String>user.input</String>
                                             </field>
                                             <field name="description">
@@ -79,10 +56,10 @@
                                             <field name="type">
                                                 <Integer>5</Integer>
                                             </field>
-                                            <field name="isPredefined">
-                                                <Boolean>false</Boolean>
-                                            </field>
                                             <field name="possibleValues">
+                                                <null/>
+                                            </field>
+                                            <field name="possibleValuesDescriptions">
                                                 <null/>
                                             </field>
                                         </antParameter>

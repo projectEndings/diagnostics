@@ -18,10 +18,9 @@
     <property value="${user.input}" name="user.input.string"/>
     
     <tstamp>
-        <format property="date" pattern="yyyy-mm-dd" locale="en"/>
+        <format property="date" pattern="yyyy-MM-dd" locale="en"/>
     </tstamp>
     
-    <!--<property value="${currDateW3C}" name="date"/>-->
     
 <!--  This is taken with thanks from:
       http://stackoverflow.com/questions/4696176/using-ant-how-do-i-open-a-file-in-a-browser -->

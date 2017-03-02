@@ -72,7 +72,7 @@
     
     <xsl:template match="/">
         <xsl:message>Running diagnostics...</xsl:message>
-        <xsl:result-document href="file://{translate($outputDirectory, '\', '/')}/diagnostics.html">
+        <xsl:result-document href="file:///{translate($outputDirectory, '\', '/')}/diagnostics.html">
             <xsl:text disable-output-escaping="yes">&lt;!DOCTYPE html&gt;
             </xsl:text>
             <html>

@@ -40,7 +40,7 @@
         XML documents in it. We'll process all of those documents.</xd:desc>
     </xd:doc>
     <xsl:variable name="projectCollection"
-        select="collection(concat($projectDirectory, '?select=*.xml;recurse=yes'))"/>
+        select="collection(concat('file:///', translate($projectDirectory, '\', '/'), '?select=*.xml;recurse=yes'))"/>
     <xsl:variable name="teiDocs" select="$projectCollection//TEI"/>
 
     <xd:doc scope="component">

@@ -79,8 +79,8 @@
                 <head>
                     <title>Diagnostics for project at <xsl:value-of select="$projectDirectory"/></title>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-                    <xsl:copy-of select="$css"/>
                     <xsl:copy-of select="$javascript"/>
+                    <xsl:copy-of select="$css"/>
                 </head>
                 <body>
                     <h1>Diagnostics for project at <xsl:value-of select="$projectDirectory"/></h1>
@@ -128,6 +128,58 @@
     <!--************** CONSISTENCY CHECKS ********************-->
     
     
+    <xd:doc>
+        <xd:desc>
+            <xd:ref name="createDiagnosticsDiv" type="template"/>
+            <xd:p>This template creates the XHTML5 div elements for the 
+            diagnostics output.</xd:p>
+        </xd:desc>
+        <xd:param name="id">
+            <xd:p>Gives a unique id to the div. If nothing is supplied,
+            it generates an id.</xd:p>
+        </xd:param>
+        <xd:param name="title">
+            <xd:p>This is the title and header for the div. Required.</xd:p>
+        </xd:param>
+        <xd:param name="explanation">
+            <xd:p>A short, prose explanation of what each div contains.</xd:p>
+        </xd:param>
+        <xd:param name="results">
+            <xd:p>The results of a consistency check (usually &lt;table&gt; or &lt;ul&gt;).</xd:p>
+        </xd:param>
+        <xd:param name="resultsCount">
+            <xd:p>The count of the results of a check. Since the results can be 
+            any container elements with any number of descendants, this count needs
+            to be supplied as a parameter, not calculated within this template.</xd:p>
+        </xd:param>
+        <xd:return>
+            <xd:p>An XHTML div element.</xd:p>
+        </xd:return>
+    </xd:doc>
+    <xsl:template name="createDiagnosticsDiv" as="element(xh:div)">
+        <xsl:param name="id"/>
+        <xsl:param name="title"/>
+        <xsl:param name="explanation"/>
+        <xsl:param name="results" as="element()*"/>
+        <xsl:param name="resultsCount" as="xs:integer"/>
+<!--        REMINDER: @CLASS='SHOWING' TEMPORARILY;-->
+        <div class="showing" data-count="{$resultsCount}" id="{$id}" data-title="{string-join($title,'')}">
+            <h3 onclick="showHide(this)" class="{if ($resultsCount=0) then 'complete' else 'toDo'}"><xsl:copy-of select="$title"/> (<xsl:value-of select="$resultsCount"/>)</h3>
+            <div id="{$id}Explanation">
+                <h4>Explanation</h4>
+                <div class="explanation">
+                    <p><xsl:copy-of select="$explanation"/></p>
+                </div>
+            </div>
+            <xsl:choose>
+                <xsl:when test="$resultsCount gt 0">
+                    <xsl:sequence select="$results"/>
+                </xsl:when>
+                <xsl:otherwise><p>None found.</p></xsl:otherwise>
+            </xsl:choose>
+        </div>
+    </xsl:template>
+    
     <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="generateDiagnosticsChecks" type="template"/>
@@ -157,8 +209,8 @@
                 declared somewhere in the project.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template name="badInternalLinks">
-        <xsl:variable name="output">
+    <xsl:template name="badInternalLinks" as="element(xh:div)">
+        <xsl:variable name="output" as="element(xh:ul)*">
             <xsl:for-each select="$teiDocs[descendant::*[@*]]">
                 <xsl:variable name="thisDoc" select="."/>
                 <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
@@ -234,17 +286,27 @@
                             <xsl:sequence select="$temp"/>
                         </li>
                     </ul>
-                    
                 </xsl:if>
             </xsl:for-each>
         </xsl:variable>
-        <xsl:if test="$output//*:ul">
-            <div>
+<!--        Now create the output div.-->
+ <!--       <xsl:if test="$output//*:ul">-->
+        <xsl:call-template name="createDiagnosticsDiv">
+            <xsl:with-param name="id" select="'badInternalLinks'"/>
+            <xsl:with-param name="explanation"
+                select="'These are links in the project to entities within
+                the projects that do not seem to exist.'"/>
+            <xsl:with-param name="title" select="'Bad Internal Links'"/>
+            <xsl:with-param name="results" select="$output"/>
+            <xsl:with-param name="resultsCount"
+                select="count($output//xh:li[ancestor::xh:li])"/>
+        </xsl:call-template>
+  <!--          <div>
                 <h3>Links within the project to targets which 
                     don't seem to exist</h3>
                 <xsl:sequence select="$output"/>
-            </div>
-        </xsl:if>
+            </div>-->
+        <!--</xsl:if>-->
     </xsl:template>
     
     <xd:doc scope="component">
@@ -255,6 +317,13 @@
         We do this because we cannot easily determine what kinds of attribute 
         values can or should contain pointers.</xd:p>
         </xd:desc>
+        <xd:param name="token">
+            <xd:p>A string input.</xd:p>
+        </xd:param>
+        <xd:return>
+            <xd:p>A boolean value in reference to whether or not
+            the string refers to a local pointer.</xd:p>
+        </xd:return>
     </xd:doc>
     <xsl:function name="hcmc:isLocalPointer" as="xs:boolean">
         <xsl:param as="xs:string" name="token"/>
@@ -287,6 +356,14 @@
             if it finds a prefixDef, it does the replacement, but
             otherwise it returns the string unchanged.</xd:p>
         </xd:desc>
+        <xd:param name="token">
+            <xd:p>A referencing token with a private URI.</xd:p>
+        </xd:param>
+        <xd:return>
+            <xd:p>If the private URI for the token can be resolved,
+            then return the resolved token. Otherwise, do nothing
+            to the token and return it.</xd:p>
+        </xd:return>
     </xd:doc>
     <xsl:function name="hcmc:resolvePrefixDef" as="xs:string">
         <xsl:param name="token" as="xs:string"/>
@@ -324,13 +401,18 @@
 <!--    Joey to Martin: Should we have a globals module for these sorts of things?
         Martin to Joey: I think we should store these in external CSS and JS 
         files and pull them in with unparsed-text(). That will make it easier
-        for people to modify them. -->
+        for people to modify them.
+        Joey to Martin: Good call. I've commented out the CDATAs since they
+        were breaking the Javascript in the output.
+    
+    -->
     
     <xsl:variable name="javascript">
         <script type="text/javascript" xmlns="http://www.w3.org/1999/xhtml">
-          <xsl:text>&lt;![CDATA[</xsl:text>
+<!--            These CDATAs seem to break the javascript in the XHTML5 output.-->
+          <!--<xsl:text>&lt;![CDATA[</xsl:text>-->
             <xsl:value-of select="unparsed-text('script.js')"/>
-          <xsl:text>]]&gt;</xsl:text>
+         <!-- <xsl:text>]]&gt;</xsl:text>-->
         </script>
     </xsl:variable>
     

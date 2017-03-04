@@ -37,7 +37,16 @@
         desktop.browse(uriLocation);
     ]]>
     </scriptdef>
-        
+    
+    <!--Documentation:
+        property: user.input.string.dir
+        input: user.input.string
+        description:
+        This takes in user.input.string from the
+        user's input from the Oxygen editor variable
+        user.input and translates it from a file
+        to a path to a directory.
+        -->
     <loadresource property="user.input.string.dir">
         <propertyresource name="user.input.string"/>
         <filterchain>

@@ -44,11 +44,26 @@
     <xsl:variable name="teiDocs" select="$projectCollection//TEI"/>
 
     <xd:doc scope="component">
-        <xd:desc>Although we check all attributes, there are some that we absolutely
+        <xd:desc>Although we basically check all attributes, there are some that we absolutely
         must explicitly exclude because they're bound to look like links and are 
-        definitely not.</xd:desc>
+        definitely not; and there are others that are quite common but are not URIs, so 
+        we may save time by excluding them</xd:desc>
     </xd:doc>
-    <xsl:variable name="excludedAtts" select="('matchPattern', 'replacementPattern')"/>
+    <xsl:variable name="excludedAtts" select="('matchPattern', 
+        'replacementPattern', 'rend', 'style', 'age',
+        'cert', 'cols', 'confidence', 'cRef', 'degree',
+        'dim', 'direct', 'discrete', 'dur', 'dur-iso',
+        'ed', 'encoding', 'evidence', 'extent', 'from', 'from-custom',
+        'from-iso', 'height', 'ident', 'key', 'label',
+        'lang', 'lemma', 'lrx', 'lry', 'match', 
+        'mimeType', 'n', 'name', 'notAfter', 'notAfter-custom', 
+        'notAfter-iso', 'notBefore', 'notBefore-custom', 'notBefore-iso', 'org', 
+        'pattern', 'place', 'points', 'precision', 'quantity', 
+        'real', 'reason', 'rhyme', 'role', 'rows', 
+        'sample', 'scope', 'scribe', 'script', 'sex',
+        'size', 'status', 'subtype', 'to', 'to-custom', 'to-iso',
+        'type',  'ulx',  'uly',  'unit',  'width',  'when',  
+        'when-custom',  'when-iso',  'xml:id',  'xml:lang',  'xml:space')"/>
     
 <!--    TODO: Create template for creating diagnostics checks divs, so that
     this document is easily expandable (following the model of Moses/MoEML diagnostics.-->

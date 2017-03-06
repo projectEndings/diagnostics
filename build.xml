@@ -31,7 +31,6 @@
         location = java.net.URLEncoder.encode(location, "UTF-8");
         location = location.toString().replaceAll("%3A",":");
         location = location.toString().replaceAll("%2F","/");
-        //println("Opening file " + location);
         var uriLocation = java.net.URI.create(location);
         var desktop = java.awt.Desktop.getDesktop();
         desktop.browse(uriLocation);

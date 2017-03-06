@@ -45,6 +45,10 @@
                     using a private URI scheme, and then another non-entity, <ref target="PERS1.xml#JB">Joe Bloggs</ref>.</p>
                 <p>We should also probably namecheck <name ref="pers:MH">Martin</name> again using 
                 a different attribute, and non-existent <name ref="pers:FB">Fred</name> too.</p>
+                
+                <p><ref target="note:note_MH">This</ref> points to a note in PERS1 using the note: prefix.</p>
+                
+                <p><ref target="note:note_FB">This</ref> points to a non-existent note.</p>
             </div>
         </body>
     </text>

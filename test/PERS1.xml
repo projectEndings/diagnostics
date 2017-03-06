@@ -20,7 +20,9 @@
         <encodingDesc>
             <p>Simple sample encoding of a personography.</p>
             
-            
+            <listPrefixDef>
+                <prefixDef ident="note" matchPattern="(.+)" replacementPattern="PERS1.xml#$1"/>
+            </listPrefixDef>
             
         </encodingDesc>
         
@@ -40,13 +42,13 @@
                   <persName>
                       <name>Martin Holmes</name>
                   </persName>
-                  <note>Programmer at HCMC, author of <ref target="testDoc.xml">testDoc.xml</ref>.</note>
+                  <note xml:id="note_MH">Programmer at HCMC, author of <ref target="testDoc.xml">testDoc.xml</ref>.</note>
               </person>
               <person xml:id="JT">
                   <persName>
                       <name>Joey Takeda</name>
                   </persName>
-                  <note>Junior Programmer at HCMC, author of <ref target="testDoc.xml#testDoc_div1">the first div of the test document</ref>.</note>
+                  <note xml:id="note_JT">Junior Programmer at HCMC, author of <ref target="testDoc.xml#testDoc_div1">the first div of the test document</ref>.</note>
               </person>
               <personGrp xml:id="diagnosticsTeam">
                   <persName corresp="#JT"/>

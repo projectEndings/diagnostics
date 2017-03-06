@@ -235,7 +235,7 @@
                                     <!-- Is it a private URI scheme? We use the regex from the TEI 
                                          definition of teidata.prefix. If it is one, resolve it 
                                          before continuing. -->
-                                    <xsl:variable name="thisToken" select="if (matches(., '^[a-z][a-z0-9\+\.\-]*:[^/]+')) then hcmc:resolvePrefixDef(.) else ." as="xs:string"/>
+                                    <xsl:variable name="thisToken" select="if (matches(., '^[a-z][a-z0-9\+\.\-]*:[^/]+')) then hcmc:resolvePrefixDef(., root($thisDoc)) else ." as="xs:string"/>
                                     
                                     <xsl:if test="hcmc:isLocalPointer($thisToken)">
                                         
@@ -367,8 +367,11 @@
     </xd:doc>
     <xsl:function name="hcmc:resolvePrefixDef" as="xs:string">
         <xsl:param name="token" as="xs:string"/>
+        <xsl:param name="sourceDoc" as="document-node()"/>
         <xsl:variable name="prefix" select="substring-before($token, ':')"/>
-        <xsl:variable name="prefixDef" select="$teiDocs//key('prefixDefs', $prefix)"/>
+<!--    Search for a prefixDef in the source document first, but if not found them look elsewhere.   -->
+        <xsl:variable name="localPrefixDef" select="$sourceDoc/key('prefixDefs', $prefix)"/>
+        <xsl:variable name="prefixDef" select="if ($localPrefixDef/@matchPattern) then $localPrefixDef else $teiDocs//key('prefixDefs', $prefix)"/>
         <xsl:choose>
             <xsl:when test="$prefixDef">
                 <!--<xsl:message>prefixDef: <xsl:value-of select="concat($prefixDef[1]/@ident, ', ', $prefixDef[1]/@matchPattern, ', ', $prefixDef[1]/@replacementPattern)"/></xsl:message>-->

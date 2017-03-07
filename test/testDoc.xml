@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<TEI xmlns="http://www.tei-c.org/ns/1.0" xml:id="testDoc" version="5.0">
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xml:id="testDoc" version="5.0" xml:lang="en">
     <teiHeader>
         <fileDesc>
             <titleStmt>
@@ -37,7 +37,7 @@
             </docTitle>
         </front>
         <body>
-            <div xml:id="testDoc_div1">
+            <div xml:id="testDoc_div1" xml:lang="eng">
                 <p>This document was created by <ref target="PERS1.xml#JT">Joey Takeda</ref>and <ref target="PERS1.xml#MH">Martin Holmes</ref> for the <ref target="http://github.com/projectEndings/diagnostics">diagnostics project</ref>. However, this was not created by <ref target="PERS1.xml#FB">Fred Bloggs</ref>,as he doesn't exist 
                     and therefore doesn't deserve any credit.</p>
                 

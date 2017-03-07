@@ -4,6 +4,7 @@
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
     exclude-result-prefixes="#all"
     xmlns="http://hcmc.uvic.ca/ns"
+    xmlns:hcmc="http://hcmc.uvic.ca/ns"
     xpath-default-namespace="http://hcmc.uvic.ca/ns"
     version="2.0">
     <xd:doc scope="stylesheet">
@@ -23,21 +24,41 @@
         
         <xsl:variable name="entries">
             <xsl:for-each select="tokenize($regString, '\s*%+\s*')[starts-with(., 'Type')]">
+                <xsl:variable name="commentsCollapsed" select="replace(., '\n\s+', ' ')"/>
                 <entry>
-                    <xsl:for-each select="tokenize(., '\s*\n\s*')[contains(., ':') and not(matches(., '^Comments:'))]">
-                        <xsl:element name="{substring-before(., ':')}"><xsl:value-of select="substring-after(., ':')"/></xsl:element>
+                    <xsl:for-each select="tokenize($commentsCollapsed, '\s*\n\s*')[contains(., ':')]">
+                        <xsl:element name="{normalize-space(substring-before(., ':'))}"><xsl:value-of select="normalize-space(substring-after(., ':'))"/></xsl:element>
                     </xsl:for-each>
                 </entry>
             </xsl:for-each>
         </xsl:variable>
         
-        <registry>
-            <xsl:for-each select="distinct-values($entries//Type)">
-                <xsl:element name="{concat(., 's')}">
-                    <xsl:copy-of select="$entries//entry[Type=.]"/>
-                </xsl:element>
-            </xsl:for-each>
-        </registry>
+        <xsl:variable name="registry">
+            <registry>
+                <xsl:for-each select="distinct-values($entries//Type)">
+                    <xsl:variable name="thisType" select="."/>
+                    <xsl:element name="{concat(., 's')}">
+                        <xsl:copy-of select="$entries//entry[Type = $thisType]"/>
+                    </xsl:element>
+                </xsl:for-each>
+            </registry>
+        </xsl:variable>
+        
+        <langInfo>
+            <xmlLangRegex><xsl:value-of select="hcmc:createXmlLangRegex($registry)"/></xmlLangRegex>
+            <xsl:copy-of select="$registry"/>
+        </langInfo>
     </xsl:template>
+    
+    <xsl:function name="hcmc:createXmlLangRegex" as="xs:string">
+        <xsl:param name="registry" as="node()"/>
+<!--   First concat all the possible language values.     -->
+        <xsl:variable name="lang" select="concat('^((', string-join($registry//entry[Type='language']/Subtag, ')|('), '))')"/>
+        <xsl:variable name="extLang" select="concat('(\-((', string-join($registry//entry[Type='extlang']/Subtag, ')|('), ')))?')"/>
+        <xsl:variable name="script" select="concat('(\-((', string-join($registry//entry[Type='script']/Subtag, ')|('), ')))?')"/>
+        <xsl:variable name="region" select="concat('(\-((', string-join($registry//entry[Type='region']/Subtag, ')|('), ')))?')"/>
+        <xsl:variable name="variant" select="concat('(\-((', string-join($registry//entry[Type='variant']/Subtag, ')|('), ')))?')"/>
+        <xsl:value-of select="concat($lang, $extLang, $script, $region, $variant, '($|\-)')"/>
+    </xsl:function>
     
 </xsl:stylesheet>

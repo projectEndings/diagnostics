@@ -134,7 +134,7 @@
                         <xsl:call-template name="generateStatistics"/>
                         <xsl:call-template name="generateDiagnosticChecks"/>
                     </div>
-                    <p class="timestamp">Last generated: <xsl:value-of select="$currentDateTime"/></p>
+                    <p class="timestamp">Last generated: <xsl:value-of select="current-dateTime()"/></p>
                 </body>
             </html>
         </xsl:result-document>

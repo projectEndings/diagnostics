@@ -35,7 +35,7 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
     
-    <xsl:variable name="currDateTime" select=""
+  
     <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="projectCollection" type="variable"/>

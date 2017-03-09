@@ -73,7 +73,7 @@
                 </not>
             </condition>
         </fail>
-       <echo message="Executing diagnostics on directory ${user.projectDirectory}"/>
+        <echo message="Executing diagnostics on directory ${user.projectDirectory}"/>
         <echo message="Creating diagnostics directory: ${outputDirectory}"/>
         <mkdir dir="${outputDirectory}"/>
     </target>
@@ -98,6 +98,21 @@
         <open file="${outputDirectory}/diagnostics.html"/>
     </target>
     
+    <target name="getDirectory">
+        <script language="javascript">
+            <![CDATA[
+                var chooser = new javax.swing.JFileChooser();
+                chooser.setDialogTitle("Choose the directory containing your TEI files");
+                chooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
+                chooser.setCurrentDirectory(new java.io.File("."));
+                if (chooser.showOpenDialog(null) == javax.swing.JFileChooser.APPROVE_OPTION) { 
+                    dir = chooser.getSelectedFile();
+                	project.setProperty('projectDir', dir);
+                }
+            ]]>
+        </script>
+        <echo>${projectDir}</echo>
+    </target>
     
     <target name="all">
         <description>

@@ -425,21 +425,6 @@
                         <scenarioAssociation-array>
                             <scenarioAssociation>
                                 <field name="url">
-                                    <String>utilities/subtag_reg_to_xml.xsl</String>
-                                </field>
-                                <field name="scenarioIds">
-                                    <list>
-                                        <String>subtag_reg_to_xml</String>
-                                    </list>
-                                </field>
-                                <field name="scenarioTypes">
-                                    <list>
-                                        <String>XML</String>
-                                    </list>
-                                </field>
-                            </scenarioAssociation>
-                            <scenarioAssociation>
-                                <field name="url">
                                     <String>build.xml</String>
                                 </field>
                                 <field name="scenarioIds">
@@ -453,6 +438,21 @@
                                     </list>
                                 </field>
                             </scenarioAssociation>
+                            <scenarioAssociation>
+                                <field name="url">
+                                    <String>utilities/subtag_reg_to_xml.xsl</String>
+                                </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>subtag_reg_to_xml</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XML</String>
+                                    </list>
+                                </field>
+                            </scenarioAssociation>
                         </scenarioAssociation-array>
                     </entry>
                     <entry>
@@ -463,7 +463,7 @@
                                     <String></String>
                                 </field>
                                 <field name="buildTarget">
-                                    <String></String>
+                                    <String>getDirectory</String>
                                 </field>
                                 <field name="buildFilePath">
                                     <String>${cfne}</String>

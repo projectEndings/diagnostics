@@ -5,18 +5,36 @@
         <title>Instructions</title>
         <style type="text/css">
             @namespace oxy "http://www.oxygenxml.com/extensions/author";
+            @namespace "http://www.w3.org/1999/xhtml";
             
             oxy|processing-instruction, oxy|comment {
                 display:none !important;
             }
             
+            *{
+                -oxy-display-tags: none;
+            }
+            
             head{
                 display: none;
+            }
+                        
+            body{
+                margin: 1em 20% 1em 20%;
+                line-height: 1.2;
+                font-family: verdana sans-serif;
+                font-size: 12pt;
+                text-align: center;
             }
             
             body, section, h1¸ h2, h3, p, ul, ol{
                 display: block;
-                -oxy-display-tags: none;
+                width: 100%;
+            }
+            
+            h1, h2, h3{
+                text-align: center;
+                margin: 0.5em;
             }
             
             h1{
@@ -31,6 +49,10 @@
                 font-size: 120%;
             }
             
+            p, ul, ol{
+                text-align: left;
+            }
+            
             ul, ol{
                 margin-left: 1em;
             }
@@ -42,21 +64,15 @@
             ol{
                 list-style-type: decimal;
             }
-            
-            body{
-                margin: 1em 20% 1em 20%;
-                line-height: 1.5;
-                font-family: verdana sans-serif;
-            }
-            
-            h1, h2, h3{
-                text-align: center;
-                margin: 0 0.5em;
-            }
+
             
             b{
-                -oxy-display-tags: none;
                 font-weight: bold;
+            }
+            
+            img{
+                display: inline-block;
+                content: attr(src, url);
             }
             
         </style>
@@ -84,7 +100,7 @@
             <li>In Oxygen, choose <b>File / Open Project</b>, and choose the <b>diagnostics.xpr</b>
             file to open the diagnostics project.</li>
             <li>Open this document in Oxygen.</li>
-            <li>Press the <b>red triangle</b> button <img src="images/btnRunScenario.png"/> on the toolbar, or choose 
+            <li>Press the <b>red triangle</b> button <img src="images/btnRunScenario.png" width="34" height="29"/> on the toolbar, or choose 
             <b>Document / Transformation / Apply Transformation Scenario(s)</b>.</li>
             <li>When prompted, choose a file in the root folder of your project directory.</li>
         </ol>

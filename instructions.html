@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Instructions</title>
+        <style type="text/css">
+            @namespace oxy "http://www.oxygenxml.com/extensions/author";
+            
+            oxy|processing-instruction, oxy|comment {
+                display:none !important;
+            }
+            
+            head{
+                display: none;
+            }
+            
+            body, section, h1¸ h2, h3, p, ul, ol{
+                display: block;
+                -oxy-display-tags: none;
+            }
+            
+            h1{
+                font-size: 200%;
+            }
+            
+            h2{
+                font-size: 150%;
+            }
+            
+            h3{
+                font-size: 120%;
+            }
+            
+            ul, ol{
+                margin-left: 1em;
+            }
+            
+            li{
+                display: list-item;
+            }
+            
+            ol{
+                list-style-type: decimal;
+            }
+            
+            body{
+                margin: 1em 20% 1em 20%;
+                line-height: 1.5;
+                font-family: verdana sans-serif;
+            }
+            
+            h1, h2, h3{
+                text-align: center;
+                margin: 0 0.5em;
+            }
+            
+            b{
+                -oxy-display-tags: none;
+                font-weight: bold;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <h1>Instructions</h1>
+        
+        <p>Before you do anything, make sure you have a local copy of the 
+        diagnostics project. You can either clone it from the GitHub 
+        repository, or you can just download a release. You will also 
+        need to know the location of your own project's TEI XML files
+        on your computer.</p>
+        
+        <section>
+        <h2>How to run diagnostics on your project in Oxygen</h2>
+        <p>To run diagnostics against a TEI XML encoding project, you will need:</p>
+        
+        <ul>
+            <li>A project folder which contains all of your TEI XML files. They
+            can be nested in subfolders or organized in any way.</li>
+            <li>A single file of any kind in that root folder.</li>
+        </ul>
+        
+        <ol>
+            <li>In Oxygen, choose <b>File / Open Project</b>, and choose the <b>diagnostics.xpr</b>
+            file to open the diagnostics project.</li>
+            <li>Open this document in Oxygen.</li>
+            <li>Press the <b>red triangle</b> button on the toolbar, or choose 
+            <b>Document / Transformation / Apply Transformation Scenario(s)</b>.</li>
+            <li>When prompted, choose a file in the root folder of your project directory.</li>
+        </ol>
+        
+        <p>You will see progress messages at the bottom of the Oxygen window, and 
+        eventually a diagnostics page will open in your web browser.</p>
+        </section>
+        
+        <section>
+        <h2>How to run diagnostics at the command line</h2>
+        
+        <ol>
+            <li>Make sure ant is installed on your computer.</li>
+            <li><b>cd</b> to the diagnostics project folder.</li>
+            <li>Run this command:<br/>
+            <b>ant -lib utilities [path-to-your-project-folder]</b>
+            </li>
+        </ol>
+        
+        <p>A new folder will be created inside your project folder 
+        called <b>diagnostics_[the-date]</b>, containing a file called
+        <b>diagnostics.html</b>. Open this file in your browser to see
+        the results of the diagnostics.</p>
+        </section>
+    </body>
+</html>

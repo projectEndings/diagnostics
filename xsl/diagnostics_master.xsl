@@ -29,7 +29,7 @@
     </xd:doc>
 
     <xsl:output method="xhtml" encoding="UTF-8" normalization-form="NFC" exclude-result-prefixes="#all"
-         omit-xml-declaration="yes" />
+         omit-xml-declaration="yes" indent="yes" />
 
     <xsl:param name="projectDirectory"/>
     <xsl:param name="outputDirectory"/>
@@ -682,10 +682,15 @@
     </xd:doc>
     <xsl:variable name="javascript">
         <script type="text/javascript" xmlns="http://www.w3.org/1999/xhtml">
-<!--            These CDATAs seem to break the javascript in the XHTML5 output.-->
-          <!--<xsl:text>&lt;![CDATA[</xsl:text>-->
-            <xsl:value-of select="unparsed-text('script.js')"/>
-         <!-- <xsl:text>]]&gt;</xsl:text>-->
+<!--            These CDATAs seem to break the javascript in the XHTML5 output.
+                Keeping it simple to avoid issues with browsers on Windows. -->
+            <!--<xsl:text disable-output-escaping="yes">//&#x0003C;!CDATA[[</xsl:text>-->
+            <!--<xsl:comment>-->
+<!--            If we don't do this, we end up with escaped &#XD;s in the JS, which breaks it, 
+                on Windows. -->
+            <xsl:value-of disable-output-escaping="yes" select="string-join(tokenize(unparsed-text('script.js'), '[&#x0a;&#x0d;]+'), '&#x0a;')"/>
+            <!--</xsl:comment>-->
+            <!--<xsl:text disable-output-escaping="yes">//]]/&#x0003E;</xsl:text>-->
         </script>
     </xsl:variable>
     

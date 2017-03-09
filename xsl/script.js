@@ -1,3 +1,4 @@
+
 /* JavaScript for basic interactivity in the results page. */
 
 

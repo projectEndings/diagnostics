@@ -428,7 +428,7 @@
                 <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
                 <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
                 <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
-                        select="position()"/>/<xsl:value-of select="count($teiDocs[//@target])"
+                        select="position()"/>/<xsl:value-of select="count($teiDocs[//@*])"
                     />)</xsl:message>
                 <xsl:variable name="temp" as="element()">
                     <ul>

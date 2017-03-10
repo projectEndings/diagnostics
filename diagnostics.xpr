@@ -463,37 +463,13 @@
                                     <String></String>
                                 </field>
                                 <field name="buildTarget">
-                                    <String>getDirectory</String>
+                                    <String></String>
                                 </field>
                                 <field name="buildFilePath">
                                     <String>${cfne}</String>
                                 </field>
                                 <field name="ditaParams">
-                                    <list>
-                                        <antParameter>
-                                            <field name="name">
-                                                <String>user.input</String>
-                                            </field>
-                                            <field name="description">
-                                                <String>This asks for a project directory from the user. It makes it relative (see http://www.oxygenxml.com/doc/versions/18.1/ug-editor/topics/editor-variables.html)</String>
-                                            </field>
-                                            <field name="value">
-                                                <String>${ask('Please fill in the path to your project's main directory',url,'')}</String>
-                                            </field>
-                                            <field name="defaultValue">
-                                                <null/>
-                                            </field>
-                                            <field name="type">
-                                                <Integer>5</Integer>
-                                            </field>
-                                            <field name="possibleValues">
-                                                <null/>
-                                            </field>
-                                            <field name="possibleValuesDescriptions">
-                                                <null/>
-                                            </field>
-                                        </antParameter>
-                                    </list>
+                                    <list/>
                                 </field>
                                 <field name="jvmArgs">
                                     <String>-Xmx256m</String>

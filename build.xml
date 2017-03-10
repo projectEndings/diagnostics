@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir="." name="Diagnostics" default="all">
+<project basedir="." name="Diagnostics" default="all" 
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless">
     
     <description>
         diagnostics/build.xml
@@ -15,7 +17,6 @@
     </description>
     
     <property name="echo.separator" value="*********************************************"/>
-    <property value="${user.input}" name="user.input.string"/>
     
     <tstamp>
         <format property="date" pattern="yyyy-MM-dd" locale="en"/>
@@ -46,36 +47,37 @@
         user.input and translates it from a file
         to a path to a directory.
         -->
-    <loadresource property="user.input.string.dir">
+<!--    <loadresource property="user.input.string.dir">
         <propertyresource name="user.input.string"/>
         <filterchain>
             <tokenfilter>
                 <replaceregex pattern="^([a-zA-Z]+:)?(.*)?$" replace="\2" flags="g"/>
             </tokenfilter>
         </filterchain>
-    </loadresource>
-    
-    <dirname property="user.projectDirectory" file="${user.input.string.dir}"/>
-    
-<!--    Setting the outputDir for the diagnostics results-->
-    <property name="outputDirectory" value="${user.projectDirectory}/diagnostics_${date}"/>    
-    
+    </loadresource>-->
     
     <target name="setup">
         <description>
             TARGET: setup
             This task creates a diagnostics directory in the projectFolder.
         </description>
-        <fail message="Project directory not found. Please check input: ${user.input}">
+        <fail message="Aborting. Directory selection was cancelled.">
+            <condition>
+                    <equals arg1="${projectDir}" arg2=""/>
+            </condition>
+        </fail>
+        <fail message="Project directory not found. Please check input: ${projectDir}.">
             <condition>
                 <not>
-                    <available file="${user.projectDirectory}" type="dir"/>
+                    <available file="${projectDir}" type="dir"/>
                 </not>
             </condition>
         </fail>
-        <echo message="Executing diagnostics on directory ${user.projectDirectory}"/>
-        <echo message="Creating diagnostics directory: ${outputDirectory}"/>
-        <mkdir dir="${outputDirectory}"/>
+        <!--    Setting the outputDir for the diagnostics results-->
+        <property name="outputDir" value="${projectDir}/diagnostics_${date}"/>    
+        <echo message="Executing diagnostics on directory ${projectDir}"/>
+        <echo message="Creating diagnostics directory: ${outputDir}"/>
+        <mkdir dir="${outputDir}"/>
     </target>
 
     
@@ -86,16 +88,19 @@
         </description>
         
         <echo message="${echo.separator}"/>
-        <echo message="Creating diagnostics output for project: ${user.projectDirectory}"/>
+        <echo message="Creating diagnostics output for project: ${projectDir}"/>
+        
+        <property name="outputDir" value="${projectDir}/diagnostics_${date}"/>   
+        
         <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
             <arg value="-s:xsl/diagnostics_master.xsl"/>
             <arg value="-xsl:xsl/diagnostics_master.xsl"/> 
-            <arg value="projectDirectory=${user.projectDirectory}"/>
-            <arg value="outputDirectory=${outputDirectory}"/>
+            <arg value="projectDirectory=${projectDir}"/>
+            <arg value="outputDirectory=${outputDir}"/>
             <arg value="currDate=${date}"/>
             <arg value="--suppressXsltNamespaceCheck:on"/>
         </java>
-        <open file="${outputDirectory}/diagnostics.html"/>
+        <open file="${outputDir}/diagnostics.html"/>
     </target>
     
     <target name="getDirectory">
@@ -109,17 +114,21 @@
                     dir = chooser.getSelectedFile();
                 	project.setProperty('projectDir', dir);
                 }
+                else{
+                    project.setProperty('projectDir', '');
+                }
             ]]>
         </script>
-        <echo>${projectDir}</echo>
+        <echo>You chose this directory: ${projectDir}.</echo>
     </target>
     
-    <target name="all">
+    <target name="all" depends="getDirectory, setup, runDiagnostics">
         <description>
             TARGET: all
             This target is the default and runs all the build processes.
         </description>
+        <!--<antcall target="getDirectory"/>
         <antcall target="setup"/>
-        <antcall target="runDiagnostics"/>
+        <antcall target="runDiagnostics"/>-->
     </target>
 </project>

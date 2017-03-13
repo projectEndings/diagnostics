@@ -39,7 +39,8 @@
          <text>
              <body>
                  <div>
-                     <p/>
+                     <p><ref target="PERS1.xml">This</ref> is the personography.</p>
+                     <p><ref target="PERSSSSS1.xml">This</ref> is NOT the personography.</p>
                  </div>
              </body>
          </text>

@@ -17,7 +17,7 @@
     <xd:doc scope="stylesheet">
         <xd:desc>
             <xd:p><xd:b>Started on:</xd:b> February 22, 2017</xd:p>
-            <xd:p><xd:b>Authors:</xd:b> <xd:a href="http://mapoflondon.uvic.ca/TAKE1.htm">jtakeda</xd:a> and <xd:a href="http://mapoflondon.uvic.ca/HOLM3.htm">mholmes</xd:a>.</xd:p>
+            <xd:p><xd:b>Authors:</xd:b> <xd:a href="http://mapoflondon.uvic.ca/HOLM3.htm">mholmes</xd:a>, <xd:a href="http://mapoflondon.uvic.ca/TAKE1.htm">jtakeda</xd:a>.</xd:p>
             <xd:p> This XSLT produces the necessary pages for the diagnostics report. It calls upon
                 a statistics module and a diagnostics module. </xd:p>
         </xd:desc>
@@ -60,7 +60,7 @@
         </xd:desc>
     </xd:doc>
     <xsl:variable name="teiDocs"
-        select="$projectCollection/*[self::TEI | self::teiCorpus | self::teiHeader | self::text]"/>
+        select="$projectCollection/*[self::TEI | self::teiCorpus]"/>
 
     <xd:doc scope="component">
         <xd:desc>
@@ -139,8 +139,6 @@
     </xd:doc>
     <xsl:variable name="xmlLangRegex" select="replace(unparsed-text('xmlLangRegex.txt'), '\s+', '')"/>
     
-<!--    TODO: Create template for creating diagnostics checks divs, so that
-    this document is easily expandable (following the model of Moses/MoEML diagnostics.-->
 
     <xd:doc scope="component">
         <xd:desc>This key indexes all @xml:id attributes that might be pointed at
@@ -475,7 +473,7 @@
                     />)</xsl:message>
                 <xsl:variable name="temp" as="element()">
                     <ul>
-                        <xsl:for-each select="//*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)]">
+                        <xsl:for-each select="//*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]">
                             <xsl:variable name="thisAtt" select="."/>
                             <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
                                 as="xs:string"/>

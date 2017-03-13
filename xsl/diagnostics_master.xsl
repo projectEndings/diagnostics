@@ -5,6 +5,8 @@
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
     xmlns:xi="http://www.w3.org/2001/XInclude" 
     xmlns:xh="http://www.w3.org/1999/xhtml"
+    xmlns:tei="http://www.tei-c.org/ns/1.0"
+    xmlns:teieg="http://www.tei-c.org/ns/Examples"
     exclude-result-prefixes="#all" 
     xpath-default-namespace="http://www.tei-c.org/ns/1.0"
     xmlns="http://www.w3.org/1999/xhtml" 
@@ -82,6 +84,17 @@
         'size', 'status', 'subtype', 'to', 'to-custom', 'to-iso',
         'type',  'ulx',  'uly',  'unit',  'width',  'when',  
         'when-custom',  'when-iso',  'xml:id',  'xml:lang',  'xml:space')"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="excludedNamespaces" type="variable"/>
+            <xd:p>Elements in some namespaces should probably be excluded from
+            checking; the obvious example is the tei egXML namespace, which is
+            more than likely to include made-up examples of links that do not
+            point to anything.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="excludedNamespaces" select="('http://www.tei-c.org/ns/Examples')"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -432,7 +445,7 @@
                     />)</xsl:message>
                 <xsl:variable name="temp" as="element()">
                     <ul>
-                        <xsl:for-each select="//@*[not(local-name(.) = $excludedAtts)]">
+                        <xsl:for-each select="//*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)]">
                             <xsl:variable name="thisAtt" select="."/>
                             <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
                                 as="xs:string"/>

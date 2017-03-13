@@ -7,6 +7,8 @@
     xmlns:xh="http://www.w3.org/1999/xhtml"
     xmlns:tei="http://www.tei-c.org/ns/1.0"
     xmlns:teieg="http://www.tei-c.org/ns/Examples"
+    xmlns:java-file="java:java.io.File"
+    xmlns:java-uri="java:java.net.URI"
     exclude-result-prefixes="#all" 
     xpath-default-namespace="http://www.tei-c.org/ns/1.0"
     xmlns="http://www.w3.org/1999/xhtml" 
@@ -95,6 +97,34 @@
         </xd:desc>
     </xd:doc>
     <xsl:variable name="excludedNamespaces" select="('http://www.tei-c.org/ns/Examples')"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="xmlFileExtensions" type="variable"/>
+            <xd:p>When checking the existence of linked files, we need to know which 
+            ones can be checked with doc-available() (XML files); other strategies
+            are used for other document types. This variable contains only lower-case
+            versions of the extensions; lower-case a file's actual extension before
+            comparing.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="xmlFileExtensions" select="('xml', 'odd', 'tei', 'xsd', 'rng', 'svg', 'mml')"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="textFileExtensions" type="variable"/>
+            <xd:p>When checking the existence of linked files, the existence of text 
+                files can be checked using the unparsed-text-available(); other strategies
+                are used for other document types. This variable contains only lower-case
+                versions of the extensions; lower-case a file's actual extension before
+                comparing. We include HTML files because there's no way to know whether 
+                HTML is parsable as XML. Obviously this is not a complete list, just a
+                sampling of files that might commonly be linked from a TEI document.
+            </xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="textFileExtensions" select="('txt', 'text', 'asc', 'htm', 'html', 'css', 'js',
+                                                     'rtf', 'dtd', 'log')"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -475,13 +505,13 @@
                                             then $thisDocUri else resolve-uri($thisToken, $thisDocUri)"/>
                                         
                                         <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
-                                        <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
+                                        <xsl:variable name="fullTarget" select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
                 
                                         <xsl:choose>
                                             <xsl:when test="$teiDocs//key('declaredIds', $fullTarget)">
                                                  <!--<xsl:message>Found id for <xsl:value-of select="."/></xsl:message>-->
                                             </xsl:when>
-                                            <xsl:when test="doc-available($fullTarget)">
+                                            <xsl:when test="not(contains($fullTarget, '#')) and hcmc:fileExists($fullTarget)">
                                                 <!--<xsl:message>Found document for target.</xsl:message>-->
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -650,6 +680,45 @@
                 <xsl:value-of select="replace(substring-after($token, ':'), $prefixDef[@matchPattern][1]/@matchPattern, $prefixDef[@matchPattern][1]/@replacementPattern)"/>
             </xsl:when>
             <xsl:otherwise><xsl:value-of select="$token"/></xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+    
+    <!--<xd:doc scope="component">
+        <xd:desc>
+            <xd:ref target="hcmc:fileExists" type="function"/>
+            <xd:p>Simple Java-based function based with thanks on an example by 
+                Stefan Krause (https://www.oxygenxml.com/archives/xsl-list/201002/msg00179.html)
+                to test whether a file exists.
+            </xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:function name="hcmc:fileExists" as="xs:boolean">
+        <xsl:param name="uri" as="xs:string?"/>
+        <xsl:variable name="extension" select="replace($uri, '.+\.([^\./]+)$', '$1')"/>
+        <xsl:choose>
+            <xsl:when test="$extension = $xmlFileExtensions"><xsl:value-of select="doc-available($uri)"/></xsl:when>
+            <xsl:when test="$extension = $textFileExtensions"><xsl:value-of select="unparsed-text-available($uri)"/></xsl:when>
+            <xsl:otherwise><xsl:value-of select="java-file:exists(java-file:new(java-uri:new($uri)))"/></xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>-->
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref target="hcmc:fileExists" type="function"/>
+            <xd:p>Replacement for above Java-based system, which doesn't work 
+                under saxon9he. We may be able to take this approach instead:
+                http://saxonica.com/documentation/index.html#!extensibility/integratedfunctions/ext-simple-J
+                but for the moment we'll just give up on checking the existence of binaries.
+            </xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:function name="hcmc:fileExists" as="xs:boolean">
+        <xsl:param name="uri" as="xs:string?"/>
+        <xsl:variable name="extension" select="replace($uri, '.+\.([^\./]+)$', '$1')"/>
+        <xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>
+        <xsl:choose>
+            <xsl:when test="$extension = $xmlFileExtensions"><xsl:value-of select="doc-available($uri)"/></xsl:when>
+            <xsl:when test="$extension = $textFileExtensions"><xsl:value-of select="unparsed-text-available($uri)"/></xsl:when>
+            <xsl:otherwise><xsl:value-of select="true()"/></xsl:otherwise>
         </xsl:choose>
     </xsl:function>
     

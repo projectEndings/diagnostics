@@ -49,6 +49,10 @@
                 <p><ref target="note:note_MH">This</ref> points to a note in PERS1 using the note: prefix.</p>
                 
                 <p><ref target="note:note_FB">This</ref> points to a non-existent note.</p>
+                
+                <p>This has a link to an image that exists: <graphic url="../images/btnRunScenario.png"/>.</p>
+                
+                <p>This has a link to an image that doesn't exist: <graphic url="../images/notThere.png"/>.</p>
             </div>
         </body>
     </text>

@@ -465,10 +465,6 @@
                                         else ." as="xs:string"/>
                                     
                                     <xsl:if test="hcmc:isLocalPointer($thisToken)">
-                                        
-                                        <!-- At this point we need to resolve private URI schemes. 
-                                             Leave that aside for the moment. -->
-                                        
             
                                         <!-- Filepaths are relative to the containing document, so all 
                                              filepaths need to be resolved in order to be checked. -->
@@ -476,7 +472,7 @@
                                             if (matches($thisToken, '.+#'))
                                             then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
                                             else if (matches($thisToken, '^#'))
-                                            then $thisDocUri else ''"/>
+                                            then $thisDocUri else resolve-uri($thisToken, $thisDocUri)"/>
                                         
                                         <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
                                         <xsl:variable name="fullTarget" select="concat($targetDoc, '#', $targetId)"/>
@@ -609,8 +605,8 @@
                 <xsl:value-of select="false()"/>
             </xsl:when>
 <!-- Is it a direct link to a document? We assume that a document has
-     an extension of up to six characters. -->
-            <xsl:when test="matches($token, '[^\.]+\.[^\.]{1,6}$')">
+     a name of at least three and an extension of up to six characters. -->
+            <xsl:when test="matches($token, '[^\.]{3,}\.[^\.]{1,6}$')">
                 <xsl:value-of select="true()"/>
             </xsl:when>
 <!-- Does it end with a hash followed by a QName? Regex is based on XML Schema

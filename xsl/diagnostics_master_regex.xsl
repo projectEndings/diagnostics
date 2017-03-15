@@ -503,7 +503,7 @@
                     <xsl:variable name="attsToCheck" select="descendant-or-self::*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]"/>
                     
                     <ul>
-                        <xsl:message>Checking <xsl:value-of select="$attsToCheck"/> attributes...</xsl:message>
+                        <xsl:message>Checking <xsl:value-of select="count($attsToCheck)"/> attributes...</xsl:message>
                         <xsl:for-each select="$attsToCheck">
                             <xsl:variable name="thisAtt" select="."/>
                             <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"

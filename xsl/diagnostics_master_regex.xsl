@@ -39,6 +39,7 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
     
+    <xsl:include href="badInternalLinksTest_module.xsl"/>
   
     <xd:doc scope="component">
         <xd:desc>
@@ -77,15 +78,15 @@
         'dim', 'direct', 'discrete', 'dur', 'dur-iso',
         'ed', 'encoding', 'evidence', 'extent', 'from', 'from-custom',
         'from-iso', 'height', 'id','ident', 'key', 'label',
-        'lang', 'lemma', 'lrx', 'lry', 'match', 
+        'lang', 'lemma', 'level', 'lrx', 'lry', 'match', 
         'mimeType', 'n', 'name', 'notAfter', 'notAfter-custom', 
         'notAfter-iso', 'notBefore', 'notBefore-custom', 'notBefore-iso', 'org', 
         'pattern', 'place', 'points', 'precision', 'quantity', 
         'real', 'reason', 'rhyme', 'role', 'rows', 
         'sample', 'scope', 'scribe', 'script', 'sex',
         'size', 'status', 'subtype', 'to', 'to-custom', 'to-iso',
-        'title', 'type',  'ulx',  'uly',  'unit',  'width',  'when',  
-        'when-custom',  'when-iso',  'xml:id',  'xml:lang',  'xml:space')"/>
+         'type',  'ulx',  'uly',  'unit',  'width',  'when',  
+        'when-custom',  'when-iso',  'xml:id', 'id', 'lang','space',  'xml:lang',  'xml:space')"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -152,15 +153,19 @@
     
     <xsl:variable name="projectDirRel" select="replace($projectDirectory,'/\./','/')"/>
     <xsl:variable name="allIds" select="$teiDocs/descendant-or-self::*/@xml:id"/>
-    <xsl:variable name="allIdsFull" select="
-        for $a in $allIds
-        return normalize-space(concat(document-uri(root($a)),'#',$a))"/>
-    <xsl:variable name="allIdsRel" select="
-        for $a in $allIdsFull
-        return replace(replace($a,'/\./','/'),concat('file:',$projectDirRel,'/'),'')"/>
-    <xsl:variable name="idRegex" 
-        select="concat('^file:',$projectDirRel,'/(',string-join(for $x in $allIdsRel return concat('(',$x,')'),'|'),')$')"/>
-       
+    <xsl:variable name="idRegex" select="
+        hcmc:makeRegex((for $a in $allIds
+        return normalize-space(concat(document-uri(root($a)),'#',$a))),$projectDirRel)"/>
+    
+    <xsl:variable name="projectFilesRegex" select="hcmc:makeRegex((for $n in $projectCollection return document-uri($n)),$projectDirRel)"/>
+    
+    
+    <xsl:function name="hcmc:makeRegex" as="xs:string">
+        <xsl:param name="strings"/>
+        <xsl:param name="baseDir"/>
+        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:',$baseDir,'/'),'')"/>
+        <xsl:value-of select="replace(concat('^file:',$baseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
+    </xsl:function>
     <!--Sample: file:/Users/joeytakeda/projectEndings/diagnostics/\./test/website_structure_standalone_test.xml#clickToZoomCaption-->
     
     <xd:doc scope="component">
@@ -169,11 +174,9 @@
         </xd:desc>
     </xd:doc>
     <xsl:key name="prefixDefs" match="prefixDef" use="@ident"/>
-    
+
     <xsl:template match="/">
         <xsl:message>Running diagnostics...</xsl:message>
-        <xsl:message><xsl:value-of select="$projectDirectory"/></xsl:message>
-        <xsl:message><xsl:value-of select="$idRegex"/></xsl:message>
         <xsl:result-document href="file:///{translate($outputDirectory, '\', '/')}/diagnostics.html">
             <xsl:text disable-output-escaping="yes">&lt;!DOCTYPE html&gt;
             </xsl:text>
@@ -189,6 +192,7 @@
                     <div>
                         <xsl:call-template name="generateStatistics"/>
                         <xsl:call-template name="generateDiagnosticChecks"/>
+                        
                     </div>
                     <p class="timestamp">Last generated: <xsl:value-of select="current-dateTime()"/></p>
                 </body>
@@ -415,6 +419,7 @@
         <div>
             <h2>Consistency Checks</h2>
             <xsl:call-template name="badInternalLinks"/>
+           <!-- <xsl:call-template name="badInternalLinks_test"/>-->
             <xsl:call-template name="badXmlLangValues"/>
         </div>
     </xsl:template>
@@ -495,8 +500,11 @@
                         select="position()"/>/<xsl:value-of select="$docsToCheckCount"
                     />)</xsl:message>
                 <xsl:variable name="temp" as="element()">
+                    <xsl:variable name="attsToCheck" select="descendant-or-self::*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]"/>
+                    
                     <ul>
-                        <xsl:for-each select="//*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]">
+                        <xsl:message>Checking <xsl:value-of select="$attsToCheck"/> attributes...</xsl:message>
+                        <xsl:for-each select="$attsToCheck">
                             <xsl:variable name="thisAtt" select="."/>
                             <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
                                 as="xs:string"/>
@@ -608,6 +616,7 @@
         </xd:desc>
     </xd:doc>
     <xsl:template name="badXmlLangValues" as="element(xh:div)">
+        <xsl:message>Checking for bad XML language values...</xsl:message>
         <xsl:variable name="output" as="element(xh:ul)*">
             <xsl:for-each select="$teiDocs[descendant::*[@xml:lang]]">
                 <xsl:variable name="thisDoc" select="."/>
@@ -716,7 +725,10 @@
         <xsl:variable name="prefix" select="substring-before($token, ':')"/>
 <!--    Search for a prefixDef in the source document first, but if not found them look elsewhere.   -->
         <xsl:variable name="localPrefixDef" select="$sourceDoc/key('prefixDefs', $prefix)"/>
-        <xsl:variable name="prefixDef" select="if ($localPrefixDef/@matchPattern) then $localPrefixDef else $teiDocs//key('prefixDefs', $prefix)"/>
+        <xsl:variable name="prefixDef" select="
+            if ($localPrefixDef/@matchPattern) 
+            then $localPrefixDef
+            else $teiDocs[descendant::prefixDef]//key('prefixDefs', $prefix)"/>
         <xsl:choose>
             <xsl:when test="$prefixDef">
                 <!--<xsl:message>prefixDef: <xsl:value-of select="concat($prefixDef[1]/@ident, ', ', $prefixDef[1]/@matchPattern, ', ', $prefixDef[1]/@replacementPattern)"/></xsl:message>-->
@@ -757,9 +769,19 @@
     <xsl:function name="hcmc:fileExists" as="xs:boolean">
         <xsl:param name="uri" as="xs:string?"/>
         <xsl:variable name="extension" select="replace($uri, '.+\.([^\./]+)$', '$1')"/>
-        <xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>
+       <!-- <xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>-->
         <xsl:choose>
-            <xsl:when test="$extension = $xmlFileExtensions"><xsl:message>Checking <xsl:value-of select="$uri"/></xsl:message><xsl:value-of select="doc-available($uri)"/></xsl:when>
+            <xsl:when test="$extension = $xmlFileExtensions">
+                <!--<xsl:message>Checking <xsl:value-of select="$uri"/></xsl:message>-->
+                <xsl:choose>
+                    <xsl:when test="matches($uri,$projectFilesRegex)">
+                        <xsl:value-of select="true()"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="doc-available($uri)"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
             <xsl:when test="$extension = $textFileExtensions"><xsl:value-of select="unparsed-text-available($uri)"/></xsl:when>
             <xsl:otherwise><xsl:value-of select="true()"/></xsl:otherwise>
         </xsl:choose>

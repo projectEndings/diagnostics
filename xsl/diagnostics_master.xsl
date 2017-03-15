@@ -513,6 +513,8 @@
                                                 <!--<xsl:message>Found document for target.</xsl:message>-->
                                             </xsl:when>
                                             <xsl:otherwise>
+                                        <!-- Might as well report errors as we find them... -->
+                                                <xsl:message><xsl:value-of select="$thisDocFileName"/>//<xsl:value-of select="$thisAtt/parent::*/local-name()"/>/@<xsl:value-of select="local-name($thisAtt)"/>: bad value "<xsl:value-of select="."/>"</xsl:message>
                                                 <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
                                                     <span class="xmlAttVal"><xsl:value-of select="."/></span>
                                                 </li>
@@ -712,7 +714,7 @@
     <xsl:function name="hcmc:fileExists" as="xs:boolean">
         <xsl:param name="uri" as="xs:string?"/>
         <xsl:variable name="extension" select="replace($uri, '.+\.([^\./]+)$', '$1')"/>
-        <xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>
+        <!--<xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>-->
         <xsl:choose>
             <xsl:when test="$extension = $xmlFileExtensions"><xsl:value-of select="doc-available($uri)"/></xsl:when>
             <xsl:when test="$extension = $textFileExtensions"><xsl:value-of select="unparsed-text-available($uri)"/></xsl:when>

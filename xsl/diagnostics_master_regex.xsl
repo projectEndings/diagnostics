@@ -39,7 +39,7 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
     
-    <xsl:include href="badInternalLinksTest_module.xsl"/>
+  
   
     <xd:doc scope="component">
         <xd:desc>

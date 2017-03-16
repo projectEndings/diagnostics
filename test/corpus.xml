@@ -25,6 +25,8 @@
                      <title/>
                      <author>
                          <name ref="PERS1.xml#JT">Joey Takeda</name>
+                         <name ref="#JT">Joey (but who isn't declaired in this file)</name>
+                         <name ref="testDoc.xml#FB">Fred Bloggs (who isn't in testDoc either)</name>
                          <name ref="PERS1.xml#FB">The Non-existent Fred Bloggs</name>
                      </author>
                  </titleStmt>

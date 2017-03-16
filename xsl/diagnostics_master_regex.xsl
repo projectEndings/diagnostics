@@ -494,7 +494,9 @@
     </xsl:template>
     
     
-    <xsl:key name="value-to-atts" match="@*[not(local-name()=$excludedAtts)]" use="tokenize(.,'\s+')"/>
+    <xsl:key name="value-to-atts" 
+        match="*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)]"
+        use="tokenize(normalize-space(.),'\s+')"/>
     
     <!--Bad internal links by pointer uses the distinct values
         of pointers in each document and then uses a key to find
@@ -507,22 +509,20 @@
             <xsl:for-each select="$docsToCheck">
                 <xsl:variable name="thisDoc" select="."/>
                 <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
-                <!--<xsl:variable name="thisDocIdsRegex" select="
-                    concat('^(',string-join(for $n in $thisDoc/descendant-or-self::*/@xml:id return concat('(',$n,')'),'|'),')$')"/>-->
-                <!--    We can't assume documents have ids on their root elements.        -->
-                <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
                 <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
                 <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
                     select="position()"/>/<xsl:value-of select="$docsToCheckCount"
                     />)</xsl:message>
                 <xsl:variable name="temp" as="element()">
                     <xsl:variable name="attsToCheck" select="descendant-or-self::*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]"/>
-                    <xsl:variable name="distinctAttTokens" select="distinct-values(for $a in $attsToCheck return tokenize($a,'\s+'))"/>
+                    <xsl:variable name="distinctAttTokens"
+                        select="distinct-values(
+                        for $a in $attsToCheck 
+                        return normalize-space(tokenize($a,'\s+')))"/>
+                    
                     <ul>
+                        <!--This is a temp variable to be used later-->
                         <xsl:variable name="checkAtts" as="xs:string*">
-                            
-                            
-                            
                             <xsl:for-each select="$distinctAttTokens">
                                 <!-- <xsl:message>Processing <xsl:value-of select="."/></xsl:message>-->
                                 <xsl:variable name="tokenOriginal" select="."/>
@@ -536,21 +536,21 @@
                                     then hcmc:resolvePrefixDef(., root($thisDoc))
                                     else ." as="xs:string"/>
                                 
+                                <!--Test to see if its local to the project and 
+                                    not an external URL-->
+                               
                                 <xsl:if test="hcmc:isLocalPointer($thisToken)">
-                                    
-                                    
                                     <xsl:choose>
+                                        <!--If this is an in document pointer, then just check this document-->
                                         <xsl:when test="matches($thisToken,'^#')">
-                                            
                                             <xsl:choose>
                                                 <xsl:when test="$thisDoc/key('idMatch',$thisToken)"/>
-                                                
-                                                
                                                 <xsl:otherwise>
                                                     <xsl:value-of select="$tokenOriginal"/>
                                                 </xsl:otherwise>
                                             </xsl:choose>
                                         </xsl:when>
+                                        <!--Otherwise, process through the pipeline-->
                                         <xsl:otherwise>
                                             <xsl:variable name="targetDoc" select="
                                                 if (matches($thisToken, '.+#'))
@@ -578,15 +578,12 @@
                                             </xsl:choose>
                                         </xsl:otherwise>
                                     </xsl:choose>
-                                    
                                 </xsl:if>
-                                
                             </xsl:for-each>
                         </xsl:variable>
+                        
                         <xsl:for-each select="$checkAtts">
-                            
                             <xsl:variable name="attToken" select="."/>
-                            
                             <xsl:for-each select="$thisDoc/key('value-to-atts', $attToken)">
                                 <xsl:variable name="thisAtt" select="."/>
                                 <xsl:variable name="thisAttName" select="local-name($thisAtt)"/>
@@ -598,12 +595,7 @@
                         </xsl:for-each>
                     </ul>
                 </xsl:variable>
-                
-                
-                
-                
-                
-                
+
                 <xsl:if test="$temp//*:li">
                     <ul>
                         <li><xsl:value-of select="$thisDocFileName"/>

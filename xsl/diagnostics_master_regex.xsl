@@ -39,7 +39,7 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
     
-  <xsl:key name="idMatch" match="*/@xml:id" use="normalize-space(concat('#',.))"/>
+ 
   
     <xd:doc scope="component">
         <xd:desc>
@@ -86,7 +86,8 @@
         'sample', 'scope', 'scribe', 'script', 'sex',
         'size', 'status', 'subtype', 'to', 'to-custom', 'to-iso',
          'type',  'ulx',  'uly',  'unit',  'width',  'when',  
-        'when-custom',  'when-iso',  'xml:id', 'id', 'lang','space',  'xml:lang',  'xml:space')"/>
+        'when-custom',  'when-iso',  'xml:id', 'id', 'lang',
+        'space', 'version', 'xml:lang',  'xml:space')"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -151,15 +152,24 @@
     <xsl:key name="declaredIds" match="*/@xml:id"
         use="normalize-space(concat(document-uri(root(.)), '#', .))"/>
     
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="idMatch" type="key"/>
+            <xd:p>This key indexes all @xml:id attributes in a document for
+            quick processing of documents that refer to ids internally.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:key name="idMatch" match="*/@xml:id" use="normalize-space(concat('#',.))"/>
+    
     <xsl:variable name="projectDirRel" select="replace($projectDirectory,'/\./','/')"/>
-    <xsl:variable name="allIds" select="$teiDocs/descendant-or-self::*/@xml:id"/>
+    <xsl:variable name="allIds" select="$teiDocs/descendant-or-self::*/@xml:id" as="attribute(xml:id)*"/>
     <xsl:variable name="idRegex" select="
         hcmc:makeRegex((for $a in $allIds
         return normalize-space(concat(document-uri(root($a)),'#',$a))),$projectDirRel)"/>
     
     <xsl:variable name="projectFilesRegex" select="hcmc:makeRegex((for $n in $projectCollection return document-uri($n)),$projectDirRel)"/>
     
-    
+   
     <xsl:function name="hcmc:makeRegex" as="xs:string">
         <xsl:param name="strings"/>
         <xsl:param name="baseDir"/>
@@ -174,7 +184,12 @@
         </xd:desc>
     </xd:doc>
     <xsl:key name="prefixDefs" match="prefixDef" use="@ident"/>
-
+    
+    <xsl:variable name="docsWithPrefixDefs" select="$teiDocs[descendant::prefixDef]"/>
+    
+    <xsl:variable name="allPrefixDefs" select="$teiDocs//prefixDef[@matchPattern and @replacementPattern and @ident]"/>
+    
+ 
     <xsl:template match="/">
         <xsl:message>Running diagnostics...</xsl:message>
         <xsl:result-document href="file:///{translate($outputDirectory, '\', '/')}/diagnostics.html">
@@ -212,6 +227,7 @@
         <xsl:message>Creating statistics...</xsl:message>
         <xsl:variable name="teiDocCount" select="count($teiDocs)"/>
         <xsl:variable name="teiDocsDeclaredIdsCount" select="count($teiDocs/descendant-or-self::*/@xml:id)"/>
+       
         
         <xsl:message>TEI doc count: <xsl:value-of select="$teiDocCount"/>&#x0a;@xml:id count: <xsl:value-of select="$teiDocsDeclaredIdsCount"/></xsl:message>
         
@@ -418,8 +434,8 @@
         <xsl:message>Performing consistency checks...</xsl:message>
         <div>
             <h2>Consistency Checks</h2>
-            <xsl:call-template name="badInternalLinks"/>
-           <!-- <xsl:call-template name="badInternalLinks_test"/>-->
+            <!--<xsl:call-template name="badInternalLinks"/>-->
+            <xsl:call-template name="badInternalLinksByPointer"/>
             <xsl:call-template name="badXmlLangValues"/>
         </div>
     </xsl:template>
@@ -477,6 +493,141 @@
         </div>
     </xsl:template>
     
+    
+    <xsl:key name="value-to-atts" match="@*[not(local-name()=$excludedAtts)]" use="tokenize(.,'\s+')"/>
+    
+    <!--Bad internal links by pointer uses the distinct values
+        of pointers in each document and then uses a key to find
+        all the attributes that use that pointer.-->
+    <xsl:template name="badInternalLinksByPointer" as="element(xh:div)">
+        <xsl:message>Checking for bad internal links...</xsl:message>
+        <xsl:variable name="output" as="element(xh:ul)*">
+            <xsl:variable name="docsToCheck" select="$teiDocs[descendant::*[@*]]"/>
+            <xsl:variable name="docsToCheckCount" select="count($docsToCheck)"/>
+            <xsl:for-each select="$docsToCheck">
+                <xsl:variable name="thisDoc" select="."/>
+                <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
+                <!--<xsl:variable name="thisDocIdsRegex" select="
+                    concat('^(',string-join(for $n in $thisDoc/descendant-or-self::*/@xml:id return concat('(',$n,')'),'|'),')$')"/>-->
+                <!--    We can't assume documents have ids on their root elements.        -->
+                <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
+                <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
+                <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
+                    select="position()"/>/<xsl:value-of select="$docsToCheckCount"
+                    />)</xsl:message>
+                <xsl:variable name="temp" as="element()">
+                    <xsl:variable name="attsToCheck" select="descendant-or-self::*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]"/>
+                    <xsl:variable name="distinctAttTokens" select="distinct-values(for $a in $attsToCheck return tokenize($a,'\s+'))"/>
+                    <ul>
+                        <xsl:variable name="checkAtts" as="xs:string*">
+                            
+                            
+                            
+                            <xsl:for-each select="$distinctAttTokens">
+                                <!-- <xsl:message>Processing <xsl:value-of select="."/></xsl:message>-->
+                                <xsl:variable name="tokenOriginal" select="."/>
+                                <!-- Is it a private URI scheme? We use the regex from the TEI 
+                                         definition of teidata.prefix. If it is one, resolve it 
+                                         before continuing. -->
+                                
+                                <xsl:variable 
+                                    name="thisToken" 
+                                    select="if (matches(., '^[a-z][a-z0-9\+\.\-]*:[^/]+'))
+                                    then hcmc:resolvePrefixDef(., root($thisDoc))
+                                    else ." as="xs:string"/>
+                                
+                                <xsl:if test="hcmc:isLocalPointer($thisToken)">
+                                    
+                                    
+                                    <xsl:choose>
+                                        <xsl:when test="matches($thisToken,'^#')">
+                                            
+                                            <xsl:choose>
+                                                <xsl:when test="$thisDoc/key('idMatch',$thisToken)"/>
+                                                
+                                                
+                                                <xsl:otherwise>
+                                                    <xsl:value-of select="$tokenOriginal"/>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <xsl:variable name="targetDoc" select="
+                                                if (matches($thisToken, '.+#'))
+                                                then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
+                                                else if (matches($thisToken, '^#'))
+                                                then $thisDocUri else resolve-uri($thisToken, $thisDocUri)"/>
+                                            
+                                            <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
+                                            <xsl:variable name="fullTarget"
+                                                select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
+                                            <xsl:variable name="fullTargCanonical" select="replace($fullTarget,'/\./','/')"/>
+                                            
+                                            <xsl:choose>
+                                                <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
+                                                    <!--Do nothing-->
+                                                </xsl:when>
+                                                <xsl:when test="
+                                                    not(contains($fullTargCanonical, '#')) and
+                                                    hcmc:fileExists($fullTarget)">
+                                                    <!--<xsl:message>Found document for target.</xsl:message>-->
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <xsl:value-of select="$tokenOriginal"/>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:otherwise>
+                                    </xsl:choose>
+                                    
+                                </xsl:if>
+                                
+                            </xsl:for-each>
+                        </xsl:variable>
+                        <xsl:for-each select="$checkAtts">
+                            
+                            <xsl:variable name="attToken" select="."/>
+                            
+                            <xsl:for-each select="$thisDoc/key('value-to-atts', $attToken)">
+                                <xsl:variable name="thisAtt" select="."/>
+                                <xsl:variable name="thisAttName" select="local-name($thisAtt)"/>
+                                
+                                <li><span class="xmlAttName"><xsl:value-of select="$thisAttName"/></span>: 
+                                    <span class="xmlAttVal"><xsl:value-of select="$attToken"/></span>
+                                </li>
+                            </xsl:for-each>
+                        </xsl:for-each>
+                    </ul>
+                </xsl:variable>
+                
+                
+                
+                
+                
+                
+                <xsl:if test="$temp//*:li">
+                    <ul>
+                        <li><xsl:value-of select="$thisDocFileName"/>
+                            <xsl:sequence select="$temp"/>
+                        </li>
+                    </ul>
+                </xsl:if>
+            </xsl:for-each>
+        </xsl:variable>
+        <!--        Now create the output div.-->
+        <!--       <xsl:if test="$output//*:ul">-->
+        <xsl:call-template name="createDiagnosticsDiv">
+            <xsl:with-param name="id" select="'badInternalLinks'"/>
+            <xsl:with-param name="explanation"
+                select="'These are links in the project to entities within
+                the projects that do not seem to exist.'"/>
+            <xsl:with-param name="title" select="'Bad Internal Links'"/>
+            <xsl:with-param name="results" select="$output"/>
+            <xsl:with-param name="resultsCount"
+                select="count($output//xh:li[ancestor::xh:li])"/>
+        </xsl:call-template>
+    </xsl:template>
+    
+    
     <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="badInternalLinks" type="template"/>
@@ -504,10 +655,12 @@
                 <xsl:variable name="temp" as="element()">
                     <xsl:variable name="attsToCheck" select="descendant-or-self::*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]"/>
                     
+                    
                     <ul>
                         <xsl:message>Checking <xsl:value-of select="count($attsToCheck)"/> attributes...</xsl:message>
                         <xsl:for-each select="$attsToCheck">
                             <xsl:variable name="thisAtt" select="."/>
+                            <xsl:variable name="thisAttName" select="local-name(.)"/>
                             <xsl:variable name="thisAttString" select="normalize-space($thisAtt)"
                                 as="xs:string"/>
                             <xsl:variable name="thisAttTokens" select="tokenize($thisAttString, '\s+')"
@@ -516,6 +669,7 @@
                             <!--<xsl:variable name="itemsFound">-->
                                 
                                 <xsl:for-each select="$thisAttTokens">
+                                    <xsl:message>Processing <xsl:value-of select="."/></xsl:message>
                                     
                                     <!-- Is it a private URI scheme? We use the regex from the TEI 
                                          definition of teidata.prefix. If it is one, resolve it 
@@ -548,13 +702,17 @@
                                         </xsl:variable>-->
                                         
                                         
-                                        <!--Fork for local (ie within single doc) versus global across the project-->
+                                        <!--
+                                            Fork for local (ie within single doc)
+                                            versus global across the project-->
                                         
                                         <xsl:choose>
                                             <xsl:when test="matches($thisToken,'^#')">
                                  
                                                 <xsl:choose>
                                                     <xsl:when test="$thisDoc/key('idMatch',$thisToken)"/>
+                                                  
+                                                    
                                                     <xsl:otherwise>
                                                         <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
                                                             <span class="xmlAttVal"><xsl:value-of select="."/></span>
@@ -576,15 +734,17 @@
                                                 
                                                 <xsl:choose>
                                                     <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
-                                                        <!--<xsl:message>Matched! <xsl:value-of select="$fullTarget"/></xsl:message>-->
-                                                        <!--<xsl:message>Found id for <xsl:value-of select="."/></xsl:message>-->
+                                                        <!--Do nothing-->
                                                     </xsl:when>
-                                                    <xsl:when test="not(contains($fullTargCanonical, '#')) and hcmc:fileExists($fullTarget)">
+                                                    <xsl:when test="
+                                                        not(contains($fullTargCanonical, '#')) and
+                                                        hcmc:fileExists($fullTarget)">
                                                         <!--<xsl:message>Found document for target.</xsl:message>-->
                                                     </xsl:when>
                                                     <xsl:otherwise>
-                                                        <!--                                                <xsl:message>Not matched: <xsl:value-of select="$fullTarget"/></xsl:message>-->
-                                                        <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
+                                                        <!-- Might as well report errors as we find them... -->
+                                                        <xsl:message><xsl:value-of select="$thisDocFileName"/>//<xsl:value-of select="$thisAtt/parent::*/local-name()"/>/@<xsl:value-of select="$thisAttName"/>: bad value "<xsl:value-of select="."/>"</xsl:message>
+                                                        <li><span class="xmlAttName"><xsl:value-of select="$thisAttName"/></span>: 
                                                             <span class="xmlAttVal"><xsl:value-of select="."/></span>
                                                         </li>
                                                     </xsl:otherwise>
@@ -750,7 +910,7 @@
         <xsl:variable name="prefixDef" select="
             if ($localPrefixDef/@matchPattern) 
             then $localPrefixDef
-            else $teiDocs[descendant::prefixDef]//key('prefixDefs', $prefix)"/>
+            else $allPrefixDefs//key('prefixDefs', $prefix)"/>
         <xsl:choose>
             <xsl:when test="$prefixDef">
                 <!--<xsl:message>prefixDef: <xsl:value-of select="concat($prefixDef[1]/@ident, ', ', $prefixDef[1]/@matchPattern, ', ', $prefixDef[1]/@replacementPattern)"/></xsl:message>-->

@@ -161,35 +161,79 @@
     </xd:doc>
     <xsl:key name="idMatch" match="*/@xml:id" use="normalize-space(concat('#',.))"/>
     
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="projectDirRel" type="variable"/>
+            <xd:p>Joey, what exactly is this doing?</xd:p>
+        </xd:desc>
+    </xd:doc>
     <xsl:variable name="projectDirRel" select="replace($projectDirectory,'/\./','/')"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="allIds" type="variable"/>
+            <xd:p>List of all the @xml:id attributes in the document 
+            collection; any of these might be targets of a pointer 
+            attribute.</xd:p>
+        </xd:desc>
+    </xd:doc>
     <xsl:variable name="allIds" select="$teiDocs/descendant-or-self::*/@xml:id" as="attribute(xml:id)*"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="idRegex" type="variable"/>
+            <xd:p>Constructed regular expression which is used to check the 
+            existence of target ids in target documents.</xd:p>
+        </xd:desc>
+    </xd:doc>
     <xsl:variable name="idRegex" select="
         hcmc:makeRegex((for $a in $allIds
         return normalize-space(concat(document-uri(root($a)),'#',$a))),$projectDirRel)"/>
     
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="projectFilesRegex" type="variable"/>
+            <xd:p>Constructed regular expression which is used to check the 
+                existence of documents in the collection which may be 
+                pointed at by pointer attributes.</xd:p>
+        </xd:desc>
+    </xd:doc>
     <xsl:variable name="projectFilesRegex" select="hcmc:makeRegex((for $n in $projectCollection return document-uri($n)),$projectDirRel)"/>
     
-   
-    <xsl:function name="hcmc:makeRegex" as="xs:string">
-        <xsl:param name="strings"/>
-        <xsl:param name="baseDir"/>
-        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:',$baseDir,'/'),'')"/>
-        <xsl:value-of select="replace(concat('^file:',$baseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
-    </xsl:function>
-    <!--Sample: file:/Users/joeytakeda/projectEndings/diagnostics/\./test/website_structure_standalone_test.xml#clickToZoomCaption-->
-    
     <xd:doc scope="component">
-        <xd:desc>This key is used to index all prefixDefs in a project so that 
-            their expansion regexes can be retrieved and used easily.
+        <xd:desc>
+            <xd:ref name="prefixDefs" type="key"/>
+            <xd:p>This key is used to index all prefixDefs in a project so that 
+            their expansion regexes can be retrieved and used easily.</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:key name="prefixDefs" match="prefixDef" use="@ident"/>
     
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="docsWithPrefixDefs" type="variable"/>
+            <xd:p>Set of all the documents in the collection that contain
+            prefixDefs. We don't know exactly where a prefixDef we need
+            may be found.</xd:p>
+        </xd:desc>
+    </xd:doc>
     <xsl:variable name="docsWithPrefixDefs" select="$teiDocs[descendant::prefixDef]"/>
     
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="allPrefixDefs" type="variable"/>
+            <xd:p>Set of all the functional prefixDef elements in the collection.</xd:p>
+        </xd:desc>
+    </xd:doc>
     <xsl:variable name="allPrefixDefs" select="$teiDocs//prefixDef[@matchPattern and @replacementPattern and @ident]"/>
     
- 
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref type="template"/>
+            <xd:p>Root template that runs the whole process.</xd:p>
+        </xd:desc>
+    </xd:doc> 
     <xsl:template match="/">
         <xsl:message>Running diagnostics...</xsl:message>
         <xsl:result-document href="file:///{translate($outputDirectory, '\', '/')}/diagnostics.html">
@@ -978,6 +1022,22 @@
         <xsl:param name="node" as="node()"/>
         <xsl:value-of select="normalize-space(tokenize(base-uri($node), '/')[last()])"/>
     </xsl:function>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="hcmc:makeRegex" type="function"/>
+            The hcmc:makeRegex function turns a list of strings 
+            (which in this case are paths) into a long regex 
+            which can be used to check them quickly.
+        </xd:desc>
+    </xd:doc>
+    <xsl:function name="hcmc:makeRegex" as="xs:string">
+        <xsl:param name="strings"/>
+        <xsl:param name="baseDir"/>
+        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:',$baseDir,'/'),'')"/>
+        <xsl:value-of select="replace(concat('^file:',$baseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
+    </xsl:function>
+    <!--Sample: file:/Users/joeytakeda/projectEndings/diagnostics/\./test/website_structure_standalone_test.xml#clickToZoomCaption-->
     
     
 <!--    HTML HEADER VARIABLES (TAKEN FROM THE MAP OF EARLY MODERN LONDON)-->

@@ -518,7 +518,7 @@
                     <xsl:variable name="distinctAttTokens"
                         select="distinct-values(
                         for $a in $attsToCheck 
-                        return normalize-space(tokenize($a,'\s+')))"/>
+                        return tokenize(normalize-space($a),'\s+'))"/>
                     
                     <ul>
                         <!--This is a temp variable to be used later-->

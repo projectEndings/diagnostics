@@ -39,7 +39,7 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
     
-  
+  <xsl:key name="idMatch" match="*/@xml:id" use="normalize-space(concat('#',.))"/>
   
     <xd:doc scope="component">
         <xd:desc>
@@ -493,6 +493,8 @@
             <xsl:for-each select="$docsToCheck">
                 <xsl:variable name="thisDoc" select="."/>
                 <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
+                <!--<xsl:variable name="thisDocIdsRegex" select="
+                    concat('^(',string-join(for $n in $thisDoc/descendant-or-self::*/@xml:id return concat('(',$n,')'),'|'),')$')"/>-->
     <!--    We can't assume documents have ids on their root elements.        -->
                 <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
                 <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
@@ -544,32 +546,52 @@
                                                 </xsl:otherwise>
                                             </xsl:choose>
                                         </xsl:variable>-->
-                                        <xsl:variable name="targetDoc" select="
-                                            if (matches($thisToken, '.+#'))
-                                            then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
-                                            else if (matches($thisToken, '^#'))
-                                            then $thisDocUri else resolve-uri($thisToken, $thisDocUri)"/>
                                         
-                                        <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
-                                        <xsl:variable name="fullTarget"
-                                            select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
-                                        <xsl:variable name="fullTargCanonical" select="replace($fullTarget,'/\./','/')"/>
-                
+                                        
+                                        <!--Fork for local (ie within single doc) versus global across the project-->
+                                        
                                         <xsl:choose>
-                                            <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
-                                                <!--<xsl:message>Matched! <xsl:value-of select="$fullTarget"/></xsl:message>-->
-                                                 <!--<xsl:message>Found id for <xsl:value-of select="."/></xsl:message>-->
-                                            </xsl:when>
-                                            <xsl:when test="not(contains($fullTargCanonical, '#')) and hcmc:fileExists($fullTarget)">
-                                                <!--<xsl:message>Found document for target.</xsl:message>-->
+                                            <xsl:when test="matches($thisToken,'^#')">
+                                 
+                                                <xsl:choose>
+                                                    <xsl:when test="$thisDoc/key('idMatch',$thisToken)"/>
+                                                    <xsl:otherwise>
+                                                        <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
+                                                            <span class="xmlAttVal"><xsl:value-of select="."/></span>
+                                                        </li>
+                                                    </xsl:otherwise>
+                                                </xsl:choose>
                                             </xsl:when>
                                             <xsl:otherwise>
-<!--                                                <xsl:message>Not matched: <xsl:value-of select="$fullTarget"/></xsl:message>-->
-                                                <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
-                                                    <span class="xmlAttVal"><xsl:value-of select="."/></span>
-                                                </li>
+                                                <xsl:variable name="targetDoc" select="
+                                                    if (matches($thisToken, '.+#'))
+                                                    then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
+                                                    else if (matches($thisToken, '^#'))
+                                                    then $thisDocUri else resolve-uri($thisToken, $thisDocUri)"/>
+                                                
+                                                <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
+                                                <xsl:variable name="fullTarget"
+                                                    select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
+                                                <xsl:variable name="fullTargCanonical" select="replace($fullTarget,'/\./','/')"/>
+                                                
+                                                <xsl:choose>
+                                                    <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
+                                                        <!--<xsl:message>Matched! <xsl:value-of select="$fullTarget"/></xsl:message>-->
+                                                        <!--<xsl:message>Found id for <xsl:value-of select="."/></xsl:message>-->
+                                                    </xsl:when>
+                                                    <xsl:when test="not(contains($fullTargCanonical, '#')) and hcmc:fileExists($fullTarget)">
+                                                        <!--<xsl:message>Found document for target.</xsl:message>-->
+                                                    </xsl:when>
+                                                    <xsl:otherwise>
+                                                        <!--                                                <xsl:message>Not matched: <xsl:value-of select="$fullTarget"/></xsl:message>-->
+                                                        <li><span class="xmlAttName"><xsl:value-of select="local-name($thisAtt)"/></span>: 
+                                                            <span class="xmlAttVal"><xsl:value-of select="."/></span>
+                                                        </li>
+                                                    </xsl:otherwise>
+                                                </xsl:choose>
                                             </xsl:otherwise>
                                         </xsl:choose>
+                                        
                                     </xsl:if>
                                     
                                 </xsl:for-each>

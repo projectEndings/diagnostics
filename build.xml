@@ -120,7 +120,7 @@
     </target>
     
     <target name="convertForWindows" if="${isWindows}">
-        <pathconvert property="projectDirFull" targetos="unix">
+        <pathconvert property="projectDirFull" targetos="windows">
             <path path="${projectDir}"/>
             <identitymapper/>
         </pathconvert>

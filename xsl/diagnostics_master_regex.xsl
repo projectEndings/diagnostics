@@ -139,10 +139,9 @@
                 and extension tags that may appear at the end.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:variable name="xmlLangRegex" 
-        select="replace(unparsed-text('xmlLangRegex.txt'), '\s+', '')"/>
+    <xsl:variable name="xmlLangRegex" select="replace(unparsed-text('xmlLangRegex.txt'), '\s+', '')"/>
     
-<!--
+
     <xd:doc scope="component">
         <xd:desc>This key indexes all @xml:id attributes that might be pointed at
         using a fully-expanded path to their container document followed by '#[id]'.
@@ -151,7 +150,7 @@
         the idref is wrong.</xd:desc>
     </xd:doc>
     <xsl:key name="declaredIds" match="*/@xml:id"
-        use="normalize-space(concat(document-uri(root(.)), '#', .))"/>-->
+        use="normalize-space(concat(document-uri(root(.)), '#', .))"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -161,6 +160,14 @@
         </xd:desc>
     </xd:doc>
     <xsl:key name="idMatch" match="*/@xml:id" use="normalize-space(concat('#',.))"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="projectDirRel" type="variable"/>
+            <xd:p>Joey, what exactly is this doing?</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="projectDirRel" select="replace($projectDirectory,'/\./','/')"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -177,16 +184,11 @@
             <xd:ref name="idRegex" type="variable"/>
             <xd:p>Constructed regular expression which is used to check the 
             existence of target ids in target documents.</xd:p>
-            
         </xd:desc>
-        <xd:return>
-            <xd:p>A string that looks like so: 
-                ^$projectDirectory/((id)|(id2)|...|(idn))$</xd:p>
-        </xd:return>
     </xd:doc>
     <xsl:variable name="idRegex" select="
         hcmc:makeRegex((for $a in $allIds
-        return normalize-space(concat(document-uri(root($a)),'#',$a))),$projectDirectory)"/>
+        return normalize-space(concat(document-uri(root($a)),'#',$a))),$projectDirRel)"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -195,12 +197,8 @@
                 existence of documents in the collection which may be 
                 pointed at by pointer attributes.</xd:p>
         </xd:desc>
-        <xd:return>
-            <xd:p>A string that looks like so: 
-                ^$projectDirectory/((uri1)|uri2)|...|(uri))$</xd:p>
-        </xd:return>
     </xd:doc>
-    <xsl:variable name="projectFilesRegex" select="hcmc:makeRegex((for $n in $projectCollection return document-uri($n)),$projectDirectory)"/>
+    <xsl:variable name="projectFilesRegex" select="hcmc:makeRegex((for $n in $projectCollection return document-uri($n)),$projectDirRel)"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -238,10 +236,6 @@
     </xd:doc> 
     <xsl:template match="/">
         <xsl:message>Running diagnostics...</xsl:message>
-        <!--Fail gracefully if there are no TEI files found.-->
-        <xsl:if test="empty($teiDocs)">
-            <xsl:message terminate="yes">ERROR. No TEI files found in directory <xsl:value-of select="$projectDirectory"/>. Please check input.</xsl:message>
-        </xsl:if>
         <xsl:result-document href="file:///{translate($outputDirectory, '\', '/')}/diagnostics.html">
             <xsl:text disable-output-escaping="yes">&lt;!DOCTYPE html&gt;
             </xsl:text>
@@ -611,13 +605,14 @@
                                             <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
                                             <xsl:variable name="fullTarget"
                                                 select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
+                                            <xsl:variable name="fullTargCanonical" select="replace($fullTarget,'/\./','/')"/>
                                             
                                             <xsl:choose>
-                                                <xsl:when test="$fullTarget[matches(.,$idRegex)]">
+                                                <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
                                                     <!--Do nothing-->
                                                 </xsl:when>
                                                 <xsl:when test="
-                                                    not(contains($fullTarget, '#')) and
+                                                    not(contains($fullTargCanonical, '#')) and
                                                     hcmc:fileExists($fullTarget)">
                                                     <!--<xsl:message>Found document for target.</xsl:message>-->
                                                 </xsl:when>

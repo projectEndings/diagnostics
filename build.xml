@@ -22,26 +22,6 @@
         <format property="date" pattern="yyyy-MM-dd" locale="en"/>
     </tstamp>
     
-    <!--Null value for projectDir, to be set
-        either by user at the command line or
-        using the getDirectory task -->
-    
-    <property name="projectDir" value=""/>
-    
-  
-  <!--Condition for whether we want/can prompt
-      for a file-->
-    
-    <condition property="promptForFile">
-        <or>
-            <not>
-                <equals arg1="${projectDir}" arg2=""/>
-            </not>
-            <os family="windows"/>
-        </or>
-    </condition>
-   
-    
     
 <!--  This is taken with thanks from:
       http://stackoverflow.com/questions/4696176/using-ant-how-do-i-open-a-file-in-a-browser -->
@@ -81,28 +61,51 @@
             TARGET: setup
             This task creates a diagnostics directory in the projectFolder.
         </description>
-        <dirname property="projectDirFull" file="${projectDir}/null.txt"/>
         <fail message="Aborting. Directory selection was cancelled.">
             <condition>
-                    <equals arg1="${projectDirFull}" arg2=""/>
+                    <equals arg1="${projectDir}" arg2=""/>
             </condition>
         </fail>
-        <fail message="Project directory not found. Please check input: ${projectDirFull}.">
+        <fail message="Project directory not found. Please check input: ${projectDir}.">
             <condition>
                 <not>
-                    <available file="${projectDirFull}" type="dir"/>
+                    <available file="${projectDir}" type="dir"/>
                 </not>
             </condition>
         </fail>
         <!--    Setting the outputDir for the diagnostics results-->
-        <property name="outputDir" value="${projectDirFull}/diagnostics_${date}"/>    
-        <echo message="Executing diagnostics on directory ${projectDirFull}"/>
+        <property name="outputDir" value="${projectDir}/diagnostics_${date}"/>    
+        <echo message="Executing diagnostics on directory ${projectDir}"/>
         <echo message="Creating diagnostics directory: ${outputDir}"/>
         <mkdir dir="${outputDir}"/>
     </target>
 
     
-    <target name="getDirectory" if="${projectDirNotSet}">
+    <target name="runDiagnostics">
+        <description>
+            TARGET: runDiagnostics
+            This task runs the diagnostics suite.
+        </description>
+        
+        <echo message="${echo.separator}"/>
+        <echo message="Creating diagnostics output for project: ${projectDir}"/>
+        
+        <property name="outputDir" value="${projectDir}/diagnostics_${date}"/>   
+        
+        <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
+            <!--<arg value="-s:xsl/diagnostics_master.xsl"/>
+            <arg value="-xsl:xsl/diagnostics_master.xsl"/> -->
+            <arg value="-s:xsl/diagnostics_master_regex.xsl"/>
+            <arg value="-xsl:xsl/diagnostics_master_regex.xsl"/>
+            <arg value="projectDirectory=${projectDir}"/>
+            <arg value="outputDirectory=${outputDir}"/>
+            <arg value="currDate=${date}"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+        <open file="${outputDir}/diagnostics.html"/>
+    </target>
+    
+    <target name="getDirectory">
         <script language="javascript">
             <![CDATA[
                 var chooser = new javax.swing.JFileChooser();
@@ -120,33 +123,6 @@
         </script>
         <echo>You chose this directory: ${projectDir}.</echo>
     </target>
-    
-    <target name="runDiagnostics">
-        <description>
-            TARGET: runDiagnostics
-            This task runs the diagnostics suite.
-        </description>
-        
-        <echo message="${echo.separator}"/>
-        <echo message="Creating diagnostics output for project: ${projectDirFull}"/>
-        
-        <property name="outputDir" value="${projectDirFull}/diagnostics_${date}"/>   
-        
-        <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
-            <!--<arg value="-s:xsl/diagnostics_master.xsl"/>
-            <arg value="-xsl:xsl/diagnostics_master.xsl"/> -->
-            <arg value="-s:xsl/diagnostics_master_regex.xsl"/>
-            <arg value="-xsl:xsl/diagnostics_master_regex.xsl"/>
-            <arg value="projectDirectory=${projectDirFull}"/>
-            <arg value="outputDirectory=${outputDir}"/>
-            <arg value="currDate=${date}"/>
-            <arg value="--suppressXsltNamespaceCheck:on"/>
-        </java>
-        <open file="${outputDir}/diagnostics.html"/>
-    </target>
-    
-   
-    
     
     <target name="all" depends="getDirectory, setup, runDiagnostics">
         <description>

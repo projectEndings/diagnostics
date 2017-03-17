@@ -22,6 +22,23 @@
         <format property="date" pattern="yyyy-MM-dd" locale="en"/>
     </tstamp>
     
+    <condition property="isWindows" value="true">
+        <os family="windows"/>
+    </condition>
+    
+    <condition property="isUnix">
+        <os family="unix" />
+    </condition>
+    
+    <property name="projectDir" value=""/>
+    
+
+        
+    
+    <condition property="promptForFile">
+        <equals arg1="${projectDir}" arg2=""/>
+    </condition>
+    
     
 <!--  This is taken with thanks from:
       http://stackoverflow.com/questions/4696176/using-ant-how-do-i-open-a-file-in-a-browser -->
@@ -47,35 +64,33 @@
         user.input and translates it from a file
         to a path to a directory.
         -->
-<!--    <loadresource property="user.input.string.dir">
-        <propertyresource name="user.input.string"/>
-        <filterchain>
-            <tokenfilter>
-                <replaceregex pattern="^([a-zA-Z]+:)?(.*)?$" replace="\2" flags="g"/>
-            </tokenfilter>
-        </filterchain>
-    </loadresource>-->
     
-    <target name="setup">
+    <target name="setup" depends="convertForUnix, convertForWindows">
         <description>
             TARGET: setup
             This task creates a diagnostics directory in the projectFolder.
         </description>
+           
+        <echo message="Input: ${projectDir}"/>
+        <echo message="Input after conversion: ${projectDirFull}"/>
+        <echo message="Output dir: ${outputDir}"/>
+        
         <fail message="Aborting. Directory selection was cancelled.">
             <condition>
-                    <equals arg1="${projectDir}" arg2=""/>
+                    <equals arg1="${projectDirFull}" arg2=""/>
             </condition>
         </fail>
         <fail message="Project directory not found. Please check input: ${projectDir}.">
             <condition>
                 <not>
-                    <available file="${projectDir}" type="dir"/>
+                    <available file="${projectDirFull}" type="dir"/>
                 </not>
             </condition>
         </fail>
-        <!--    Setting the outputDir for the diagnostics results-->
-        <property name="outputDir" value="${projectDir}/diagnostics_${date}"/>    
-        <echo message="Executing diagnostics on directory ${projectDir}"/>
+        
+     
+        
+        <echo message="Executing diagnostics on directory ${projectDirFull}"/>
         <echo message="Creating diagnostics directory: ${outputDir}"/>
         <mkdir dir="${outputDir}"/>
     </target>
@@ -88,24 +103,39 @@
         </description>
         
         <echo message="${echo.separator}"/>
-        <echo message="Creating diagnostics output for project: ${projectDir}"/>
         
-        <property name="outputDir" value="${projectDir}/diagnostics_${date}"/>   
-        
+        <echo message="Creating diagnostics output for project: ${projectDirFull}"/>
+       
+        <echo message="Outputdir: ${outputDir}"/>
         <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
             <!--<arg value="-s:xsl/diagnostics_master.xsl"/>
             <arg value="-xsl:xsl/diagnostics_master.xsl"/> -->
             <arg value="-s:xsl/diagnostics_master_regex.xsl"/>
             <arg value="-xsl:xsl/diagnostics_master_regex.xsl"/>
-            <arg value="projectDirectory=${projectDir}"/>
+            <arg value="projectDirectory=${projectDirFull}"/>
             <arg value="outputDirectory=${outputDir}"/>
             <arg value="currDate=${date}"/>
             <arg value="--suppressXsltNamespaceCheck:on"/>
         </java>
-        <open file="${outputDir}/diagnostics.html"/>
     </target>
     
-    <target name="getDirectory">
+    <target name="convertForWindows" if="${isWindows}">
+        <pathconvert property="projectDirFull" targetos="unix">
+            <path path="${projectDir}"/>
+            <identitymapper/>
+        </pathconvert>
+        <property name="outputDir" value="${projectDirFull}\diagnostics_${date}"/>
+    </target>
+    
+    <target name="convertForUnix" if="${isUnix}">
+        <pathconvert property="projectDirFull" targetos="unix">
+            <path path="${projectDir}"/>
+            <identitymapper/>
+        </pathconvert>
+        <property name="outputDir" value="${projectDirFull}/diagnostics_${date}"/>
+    </target>
+    
+    <target name="getDirectory" if="${promptForFile}">
         <script language="javascript">
             <![CDATA[
                 var chooser = new javax.swing.JFileChooser();
@@ -124,7 +154,22 @@
         <echo>You chose this directory: ${projectDir}.</echo>
     </target>
     
-    <target name="all" depends="getDirectory, setup, runDiagnostics">
+    <target name="open" depends="open.if.windows, open.if.unix">
+
+        <open file="${diagnosticsFile}"/>
+    </target>
+    
+    <target name="open.if.windows" if="${isWindows}">
+        
+       <property name="diagnosticsFile" value="${outputDir}\diagnostics.html"/>
+        <echo message="Opening ${diagnosticsFile}"/>
+    </target>
+    
+    <target name="open.if.unix" if="${isUnix}">
+        <property name="diagnosticsFile" value="${outputDir}/diagnostics.html"/>
+        <echo message="Opening ${diagnosticsFile}"/>
+    </target>
+    <target name="all" depends="getDirectory, setup, runDiagnostics, open">
         <description>
             TARGET: all
             This target is the default and runs all the build processes.

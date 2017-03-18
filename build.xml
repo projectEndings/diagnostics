@@ -169,6 +169,7 @@
         <property name="diagnosticsFile" value="${outputDir}/diagnostics.html"/>
         <echo message="Opening ${diagnosticsFile}"/>
     </target>
+    
     <target name="all" depends="getDirectory, setup, runDiagnostics, open">
         <description>
             TARGET: all
@@ -177,5 +178,28 @@
         <!--<antcall target="getDirectory"/>
         <antcall target="setup"/>
         <antcall target="runDiagnostics"/>-->
+    </target>
+    
+    <target name="moeml">
+        <description>
+            TARGET: moeml
+            This is a test target which retrieves a useful set of 1700+ XML
+            files from the Map of Early Modern London build server and 
+            runs the diagnostics against the set. We use it to test speed
+            on large collections, and also as part of ongoing quality 
+            control on the MoEML project itself.
+        </description>
+        <echo message="${echo.separator}"/>
+        <echo message="Retrieving the latest build of the MoEML Standard XML collection..."/>
+        <delete dir="moeml"/>
+        <mkdir dir="moeml"/>
+        <get src="http://jenkins.hcmc.uvic.ca/job/MoEML%20Static/lastSuccessfulBuild/artifact/static/site/xml/standard/*zip*/standard.zip" dest="moeml/standard.zip" verbose="true"/>
+        <unzip src="moeml/standard.zip" dest="moeml"/>
+        <dirname property="moemlDirFull" file="moeml/standard.zip"/>
+        <delete file="moeml/standard.zip"/>
+        <antcall target="all">
+            <param name="projectDir" value="moeml"/>
+            <param name="projectDirFull" value="${moemlDirFull}"/>
+        </antcall>
     </target>
 </project>

@@ -108,10 +108,8 @@
        
         <echo message="Outputdir: ${outputDir}"/>
         <java classname="net.sf.saxon.Transform" classpath="utilities/saxon9he.jar">
-            <!--<arg value="-s:xsl/diagnostics_master.xsl"/>
-            <arg value="-xsl:xsl/diagnostics_master.xsl"/> -->
-            <arg value="-s:xsl/diagnostics_master_regex.xsl"/>
-            <arg value="-xsl:xsl/diagnostics_master_regex.xsl"/>
+            <arg value="-s:xsl/diagnostics_master.xsl"/>
+            <arg value="-xsl:xsl/diagnostics_master.xsl"/> 
             <arg value="projectDirectory=${projectDirFull}"/>
             <arg value="outputDirectory=${outputDir}"/>
             <arg value="currDate=${date}"/>

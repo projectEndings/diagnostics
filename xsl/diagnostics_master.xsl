@@ -319,7 +319,7 @@
                         <td>Element name</td>
                         <td>Number of times element used</td>
                         <td>Number of documents containing this element</td>
-                        <td>Average number of uses per document</td>
+                        <td>Average uses per document</td>
                         <td>TEI Guidelines</td>
                     </tr>
                 </thead>
@@ -353,7 +353,7 @@
                             <td><span class="xmlTag"><xsl:value-of select="$thisElementName"/></span></td>
                             <td><xsl:value-of select="$totalElement"/></td>
                             <td><xsl:value-of select="$totalDocs"/></td>
-                            <td><xsl:value-of select="format-number($averageUses,'#.###')"/></td>
+                            <td><xsl:value-of select="format-number($averageUses,'#.#')"/></td>
                             <td><a href="http://tei-c.org/release/doc/tei-p5-doc/en/html/ref-{$thisElementName}.html">TEI</a></td>
                         </tr>
                     </xsl:for-each>

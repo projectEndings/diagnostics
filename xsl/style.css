@@ -94,6 +94,7 @@ table{
 }
 thead > tr > td{
     font-weight: bold;
+    text-align: center;
 }
 td{
     padding: 0.5em;

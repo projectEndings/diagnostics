@@ -39,7 +39,12 @@
     <xsl:param name="outputDirectory"/>
     <xsl:param name="currDate"/>
     
- 
+    
+    <!--**************************************************
+        *           
+        *               Variables           
+        *
+        **************************************************-->
   
     <xd:doc scope="component">
         <xd:desc>
@@ -50,13 +55,11 @@
     <xsl:variable name="projectCollection"
         select="collection(concat('file:///', translate($projectDirectory, '\', '/'), '?select=*.xml;recurse=yes'))"/>
     
-    <!--There are four root elements in TEI: TEI, teiCorpus, teiHeader, and text-->
-    
     <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="teiDocs" type="variable"/>
             <xd:p>All TEI documents, starting at their root. Since TEI
-                allows for four root elements (TEI, teiCorpus, teiHeader, and text [see <xd:a href="http://www.tei-c.org/release/doc/tei-p5-doc/en/html/DS.html">here</xd:a>]), we have to account
+                allows two root elements (TEI and teiCorpus[see <xd:a href="http://www.tei-c.org/release/doc/tei-p5-doc/en/html/DS.html">here</xd:a>]), we have to account
                 for all.</xd:p>
         </xd:desc>
     </xd:doc>
@@ -141,6 +144,13 @@
     </xd:doc>
     <xsl:variable name="xmlLangRegex" select="replace(unparsed-text('xmlLangRegex.txt'), '\s+', '')"/>
     
+    
+    <!--**************************************************
+        *           
+        *                  Keys         
+        *
+        **************************************************-->
+    
 
     <xd:doc scope="component">
         <xd:desc>This key indexes all @xml:id attributes that might be pointed at
@@ -163,8 +173,30 @@
     
     <xd:doc scope="component">
         <xd:desc>
+            <xd:ref name="value-to-atts" type="key"/>
+            <xd:p>This key indexes all pointer attributes by their tokenized values
+            for faster processing of internal links.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:key name="value-to-atts" 
+        match="*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)]"
+        use="tokenize(normalize-space(.),'\s+')"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="prefixDefs" type="key"/>
+            <xd:p>This key is used to index all prefixDefs in a project so that 
+                their expansion regexes can be retrieved and used easily.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:key name="prefixDefs" match="prefixDef" use="@ident"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
             <xd:ref name="projectDirRel" type="variable"/>
-            <xd:p>Joey, what exactly is this doing?</xd:p>
+            <xd:p>This variable replaces a '.' step in a
+            file path, which causes errors in output when this XSLT
+            is applied to the diagnostics/test directory.</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:variable name="projectDirRel" select="replace($projectDirectory,'/\./','/')"/>
@@ -200,14 +232,7 @@
     </xd:doc>
     <xsl:variable name="projectFilesRegex" select="hcmc:makeRegex((for $n in $projectCollection return document-uri($n)),$projectDirRel)"/>
     
-    <xd:doc scope="component">
-        <xd:desc>
-            <xd:ref name="prefixDefs" type="key"/>
-            <xd:p>This key is used to index all prefixDefs in a project so that 
-            their expansion regexes can be retrieved and used easily.</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:key name="prefixDefs" match="prefixDef" use="@ident"/>
+
     
     <xd:doc scope="component">
         <xd:desc>
@@ -226,6 +251,12 @@
         </xd:desc>
     </xd:doc>
     <xsl:variable name="allPrefixDefs" select="$teiDocs//prefixDef[@matchPattern and @replacementPattern and @ident]"/>
+    
+    <!--**************************************************
+        *           
+        *                  Templates         
+        *
+        **************************************************-->
     
     
     <xd:doc scope="component">
@@ -538,9 +569,7 @@
     </xsl:template>
     
     
-    <xsl:key name="value-to-atts" 
-        match="*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)]"
-        use="tokenize(normalize-space(.),'\s+')"/>
+    
     
     <!--Bad internal links by pointer uses the distinct values
         of pointers in each document and then uses a key to find
@@ -642,7 +671,7 @@
 
                 <xsl:if test="$temp//*:li">
                     <ul>
-                        <li><xsl:value-of select="$thisDocFileName"/>
+                        <li><xsl:value-of select="$thisDocUri"/>
                             <xsl:sequence select="$temp"/>
                         </li>
                     </ul>
@@ -663,7 +692,8 @@
         </xsl:call-template>
     </xsl:template>
     
-    
+    <!--OLD VERSION OF BAD INTERNAL LINKS: TO BE DELETED SOON.-->
+    <!--
     <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="badInternalLinks" type="template"/>
@@ -680,10 +710,10 @@
             <xsl:for-each select="$docsToCheck">
                 <xsl:variable name="thisDoc" select="."/>
                 <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
-                <!--<xsl:variable name="thisDocIdsRegex" select="
-                    concat('^(',string-join(for $n in $thisDoc/descendant-or-self::*/@xml:id return concat('(',$n,')'),'|'),')$')"/>-->
-    <!--    We can't assume documents have ids on their root elements.        -->
-                <!--<xsl:variable name="thisDocId" select="@xml:id"/>-->
+                <!-\-<xsl:variable name="thisDocIdsRegex" select="
+                    concat('^(',string-join(for $n in $thisDoc/descendant-or-self::*/@xml:id return concat('(',$n,')'),'|'),')$')"/>-\->
+    <!-\-    We can't assume documents have ids on their root elements.        -\->
+                <!-\-<xsl:variable name="thisDocId" select="@xml:id"/>-\->
                 <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
                 <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
                         select="position()"/>/<xsl:value-of select="$docsToCheckCount"
@@ -702,14 +732,14 @@
                             <xsl:variable name="thisAttTokens" select="tokenize($thisAttString, '\s+')"
                                 as="xs:string+"/>
     
-                            <!--<xsl:variable name="itemsFound">-->
+                            <!-\-<xsl:variable name="itemsFound">-\->
                                 
                                 <xsl:for-each select="$thisAttTokens">
                                     <xsl:message>Processing <xsl:value-of select="."/></xsl:message>
                                     
-                                    <!-- Is it a private URI scheme? We use the regex from the TEI 
+                                    <!-\- Is it a private URI scheme? We use the regex from the TEI 
                                          definition of teidata.prefix. If it is one, resolve it 
-                                         before continuing. -->
+                                         before continuing. -\->
                                  
                                     <xsl:variable 
                                         name="thisToken" 
@@ -719,10 +749,10 @@
                                     
                                     <xsl:if test="hcmc:isLocalPointer($thisToken)">
             
-                                        <!-- Filepaths are relative to the containing document, so all 
-                                             filepaths need to be resolved in order to be checked. -->
+                                        <!-\- Filepaths are relative to the containing document, so all 
+                                             filepaths need to be resolved in order to be checked. -\->
                                        
-                                       <!-- <xsl:variable name="targetDoc">
+                                       <!-\- <xsl:variable name="targetDoc">
                                             <xsl:choose>
                                                 <xsl:when test="matches($thisToken,'.+#')">
                                                     <xsl:value-of select="resolve-uri(substring-before($thisToken,'#'))"/>
@@ -735,12 +765,12 @@
                                                     <xsl:value-of select="resolve-uri($thisToken,$thisDocUri)"/>
                                                 </xsl:otherwise>
                                             </xsl:choose>
-                                        </xsl:variable>-->
+                                        </xsl:variable>-\->
                                         
                                         
-                                        <!--
+                                        <!-\-
                                             Fork for local (ie within single doc)
-                                            versus global across the project-->
+                                            versus global across the project-\->
                                         
                                         <xsl:choose>
                                             <xsl:when test="matches($thisToken,'^#')">
@@ -770,15 +800,15 @@
                                                 
                                                 <xsl:choose>
                                                     <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
-                                                        <!--Do nothing-->
+                                                        <!-\-Do nothing-\->
                                                     </xsl:when>
                                                     <xsl:when test="
                                                         not(contains($fullTargCanonical, '#')) and
                                                         hcmc:fileExists($fullTarget)">
-                                                        <!--<xsl:message>Found document for target.</xsl:message>-->
+                                                        <!-\-<xsl:message>Found document for target.</xsl:message>-\->
                                                     </xsl:when>
                                                     <xsl:otherwise>
-                                                        <!-- Might as well report errors as we find them... -->
+                                                        <!-\- Might as well report errors as we find them... -\->
                                                         <xsl:message><xsl:value-of select="$thisDocFileName"/>//<xsl:value-of select="$thisAtt/parent::*/local-name()"/>/@<xsl:value-of select="$thisAttName"/>: bad value "<xsl:value-of select="."/>"</xsl:message>
                                                         <li><span class="xmlAttName"><xsl:value-of select="$thisAttName"/></span>: 
                                                             <span class="xmlAttVal"><xsl:value-of select="."/></span>
@@ -791,12 +821,12 @@
                                     </xsl:if>
                                     
                                 </xsl:for-each>
-                            <!--</xsl:variable>-->
-                           <!-- <xsl:if test="$itemsFound//*:li">
+                            <!-\-</xsl:variable>-\->
+                           <!-\- <xsl:if test="$itemsFound//*:li">
                                 <ul>
                                     <xsl:sequence select="$itemsFound"/>
                                 </ul>
-                            </xsl:if>-->
+                            </xsl:if>-\->
                         </xsl:for-each>
                     </ul>
                 </xsl:variable>
@@ -810,8 +840,8 @@
                 </xsl:if>
             </xsl:for-each>
         </xsl:variable>
-<!--        Now create the output div.-->
- <!--       <xsl:if test="$output//*:ul">-->
+<!-\-        Now create the output div.-\->
+ <!-\-       <xsl:if test="$output//*:ul">-\->
         <xsl:call-template name="createDiagnosticsDiv">
             <xsl:with-param name="id" select="'badInternalLinks'"/>
             <xsl:with-param name="explanation"
@@ -822,7 +852,7 @@
             <xsl:with-param name="resultsCount"
                 select="count($output//xh:li[ancestor::xh:li])"/>
         </xsl:call-template>
-    </xsl:template>
+    </xsl:template>-->
     
     <xd:doc scope="component">
         <xd:desc>
@@ -860,7 +890,7 @@
                 </xsl:variable>
                 <xsl:if test="$temp//*:li">
                     <ul>
-                        <li><xsl:value-of select="$thisDocFileName"/>
+                        <li><xsl:value-of select="$thisDocUri"/>
                             <xsl:sequence select="$temp"/>
                         </li>
                     </ul>
@@ -879,6 +909,12 @@
                 select="count($output//xh:li[ancestor::xh:li])"/>
         </xsl:call-template>
     </xsl:template>
+    
+    <!--**************************************************
+        *           
+        *                  Functions
+        *
+        **************************************************-->
     
     <xd:doc scope="component">
         <xd:desc>
@@ -1050,6 +1086,12 @@
     
     -->
     
+    
+    <!--**************************************************
+        *           
+        *             HTML Display Variables         
+        *
+        **************************************************-->
     <xd:doc>
         <xd:desc>
             <xd:ref name="javascript" type="variable"/>

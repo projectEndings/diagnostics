@@ -139,7 +139,7 @@
                 var chooser = new javax.swing.JFileChooser();
                 chooser.setDialogTitle("Choose the directory containing your TEI files");
                 chooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
-                chooser.setCurrentDirectory(new java.io.File("."));
+                //chooser.setCurrentDirectory(new java.io.File("."));
                 if (chooser.showOpenDialog(null) == javax.swing.JFileChooser.APPROVE_OPTION) { 
                     dir = chooser.getSelectedFile();
                 	project.setProperty('projectDir', dir);

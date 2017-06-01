@@ -9,9 +9,13 @@ The diagnostic process checks that:
  - All pointers to other documents in the collection, or to @xml:id attributes in those documents, are correct.
  - All values for the @xml:lang attribute are correct.
 
+**Note**: All pointers are resolved relative to the root URI and not relative to an @xml:base value declared. We currently do not take @xml:base into account for resolving pointers as it is unclear how to resolve 
+
 It will dereference private URI schemes which are correctly declared in TEI <prefixDef> elements. Incorrect values are listed by document.
 
 It will also generate a list of all the elements and attributes used in the project, along with usage counts.
+
+
 
 See the [Instructions](instructions.html) for full details.
 

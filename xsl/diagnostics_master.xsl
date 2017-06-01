@@ -586,6 +586,9 @@
                 <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
                     select="position()"/>/<xsl:value-of select="$docsToCheckCount"
                     />)</xsl:message>
+                <xsl:if test="$thisDoc//*[@xml:base]">
+                    <xsl:message>WARNING: @xml:base detected, but currently ignored. See documentation for more detail.</xsl:message>
+                </xsl:if>
                 <xsl:variable name="temp" as="element()">
                     <xsl:variable name="attsToCheck" select="descendant-or-self::*[not(namespace-uri(.) = $excludedNamespaces)]/@*[not(local-name(.) = $excludedAtts)][string-length(normalize-space(.)) gt 0]"/>
                     <xsl:variable name="distinctAttTokens"

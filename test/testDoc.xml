@@ -46,6 +46,8 @@
                 <p>We should also probably namecheck <name ref="pers:MH">Martin</name> again using 
                 a different attribute, and non-existent <name ref="pers:FB">Fred</name> too.</p>
                 
+                <p>This points to <ref target="contrib:JT">Joey Takeda</ref>, but with the wrong prefix. This points to <ref target="chrome:FB">Joe Bloggs</ref> with an established URI scheme.</p>
+                
                 <p><ref target="note:note_MH">This</ref> points to a note in PERS1 using the note: prefix.</p>
                 
                 <p><ref target="note:note_FB">This</ref> points to a non-existent note.</p>

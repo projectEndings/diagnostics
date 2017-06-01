@@ -45,11 +45,12 @@
                      <p><ref target="PERSSSSS1.xml">This</ref> is NOT the personography.</p>
                      <p><ref target="../utilities/language-subtag-registry.txt">This</ref> is the Language Subtag Registry file.</p>
                      <p><ref target="../utilities/noSuchFile.txt">This</ref> is a non-existent text file file.</p>
+                     <p><ref target="svn:pointer">This</ref> is an established URI scheme from IANA.</p>
                  </div>
              </body>
          </text>
      </TEI>
-     <TEI xml:id="MyTextNumber2">
+     <TEI xml:id="MyTextNumber2" xml:base="../../">
          <teiHeader>
              <fileDesc>
                  <titleStmt>

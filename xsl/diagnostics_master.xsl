@@ -616,10 +616,10 @@
                                 <!-- Is it a private URI scheme? We use the regex from the TEI 
                                          definition of teidata.prefix. If it is one, resolve it 
                                          before continuing. -->
-                                
+                                <xsl:variable name="prefixRegex" select="'^[a-z][a-z0-9\+\.\-]*:[^/]+'"/>
                                 <xsl:variable 
                                     name="thisToken" 
-                                    select="if (matches(., '^[a-z][a-z0-9\+\.\-]*:[^/]+'))
+                                    select="if (matches(., $prefixRegex))
                                     then hcmc:resolvePrefixDef(., root($thisDoc))
                                     else ." as="xs:string"/>
                                 
@@ -637,27 +637,36 @@
                                                 </xsl:otherwise>
                                             </xsl:choose>
                                         </xsl:when>
+                                        
                                         <!--Otherwise, process through the pipeline-->
                                         <xsl:otherwise>
                                             <xsl:variable name="targetDoc" select="
                                                 if (matches($thisToken, '.+#'))
                                                 then resolve-uri(substring-before($thisToken, '#'), $thisDocUri)
                                                 else if (matches($thisToken, '^#'))
-                                                then $thisDocUri else resolve-uri($thisToken, $thisDocUri)"/>
+                                                then $thisDocUri 
+                                                else if (contains($thisToken,':'))
+                                                then $thisToken
+                                                else resolve-uri($thisToken, $thisDocUri)"/>
                                             
                                             <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
                                             <xsl:variable name="fullTarget"
                                                 select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
                                             <xsl:variable name="fullTargCanonical" select="replace($fullTarget,'/\./','/')"/>
-                                            
                                             <xsl:choose>
                                                 <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
                                                     <!--Do nothing-->
                                                 </xsl:when>
+                                               
                                                 <xsl:when test="
                                                     not(contains($fullTargCanonical, '#')) and
+                                                    not(matches($fullTargCanonical,$prefixRegex)) and
                                                     hcmc:fileExists($fullTarget)">
-                                                    <!--<xsl:message>Found document for target.</xsl:message>-->
+                                                   <!-- <xsl:message>Found document for <xsl:value-of select="$fullTarget"/>.</xsl:message>-->
+                                                </xsl:when>
+                                                <xsl:when test="matches($fullTargCanonical,'^[A-Za-z]:[^/\\]')">
+                                                    <xsl:message><xsl:value-of select="$fullTargCanonical"/> is an undefined prefix</xsl:message>
+                                                    <xsl:value-of select="$tokenOriginal"/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
                                                     <xsl:value-of select="$tokenOriginal"/>
@@ -788,9 +797,25 @@
         <xsl:param as="xs:string" name="token"/>
         <xsl:choose>
 <!-- Exclude external schemes first. Crude but I think it should work.-->
-            <xsl:when test="matches($token, '^[A-Za-z][A-Za-z\d\.\+\-]+://')">
+<!--            <xsl:when test="matches($token, '^[A-Za-z][A-Za-z\d\.\+\-]+://')">
                 <xsl:value-of select="false()"/>
+            </xsl:when>-->
+
+            <xsl:when test="contains($token,':')">
+                <xsl:choose>
+                    <!-- Exclude all external schemes-->
+                    <xsl:when test="matches($token,concat('^',$uriSchemeRegex,':'))">
+                       
+                        <xsl:value-of select="false()"/>
+                    </xsl:when>
+                    <!--But make sure all non-declared internal schemes are caught-->
+                    <xsl:otherwise>
+                        
+                        <xsl:value-of select="true()"/>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:when>
+            
 <!-- Is it a direct link to a document? We assume that a document has
      a name of at least three and an extension of up to six characters. -->
             <xsl:when test="matches($token, '[^\.]{3,}\.[^\.]{1,6}$')">

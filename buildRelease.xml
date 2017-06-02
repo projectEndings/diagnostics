@@ -23,11 +23,13 @@
 <!--  At this point, the package is so simple that 
       we might as well just list the required files. -->
   <fileset id="release" dir="${basedir}">
+    <include name="diagnostics.xpr"/>
     <include name="README.md"/>
     <include name="instructions.html"/>
-    <include dir="images"/>
-    <include dir="xsl"/>
-    <include file="utilities/saxon9he.jar"/>
+    <include name="build.xml"/>
+    <include name="images/**.*"/>
+    <include name="xsl/**.*"/>
+    <include name="utilities/saxon9he.jar"/>
   </fileset>
     
   <target name="all">
@@ -36,9 +38,17 @@
       This builds the release package as a zip file.
     </description>
     
-    <zip destfile="${basedir}/diagnostics_${date}">
+    <delete dir="${basedir}/temp"/>
+    <mkdir dir="${basedir}/temp/diagnostics"/>
+    <copy todir="${basedir}/temp/diagnostics">
       <fileset refid="release"/>
+    </copy>
+    
+    <zip destfile="${basedir}/diagnostics_${date}.zip">
+      <fileset dir="${basedir}/temp"/>
     </zip>
+    
+    <delete dir="${basedir}/temp"/>
     
   </target> 
     

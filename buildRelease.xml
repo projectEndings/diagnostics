@@ -1,15 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir="." name="Build Diagnostics Package for GitHub">
+<project basedir="." name="Build Diagnostics Package for Release" default="all">
   
   <description>
-      diagnostics/buildForGit.xml
+      diagnostics/buildForRelease.xml
+      
+      This creates the release package for ordinary 
+      users to download.
       
       This build is *not* included in the package
       downloadable from the GitHub repository, but
       is necessary for constructing the .zip file
       and creating some of the documents necessary
-      for the GitHub release.
+      for the release.
   </description>
     
+    
+<!--  Use the timestamp to name the output zip file.  -->
+  <tstamp>
+    <format property="date" pattern="yyyy-MM-dd" locale="en"/>
+  </tstamp>
+      
+<!--  At this point, the package is so simple that 
+      we might as well just list the required files. -->
+  <fileset id="release" dir="${basedir}">
+    <include name="README.md"/>
+    <include name="instructions.html"/>
+    <include dir="images"/>
+    <include dir="xsl"/>
+    <include file="utilities/saxon9he.jar"/>
+  </fileset>
+    
+  <target name="all">
+    <description>
+      target: all
+      This builds the release package as a zip file.
+    </description>
+    
+    <zip destfile="${basedir}/diagnostics_${date}">
+      <fileset refid="release"/>
+    </zip>
+    
+  </target> 
     
 </project>

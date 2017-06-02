@@ -191,7 +191,7 @@
         <echo message="Retrieving the latest build of the MoEML Standard XML collection..."/>
         <delete dir="moeml"/>
         <mkdir dir="moeml"/>
-        <get src="http://jenkins.hcmc.uvic.ca/job/MoEML%20Static/lastSuccessfulBuild/artifact/static/site/xml/standard/*zip*/standard.zip" dest="moeml/standard.zip" verbose="true"/>
+        <get src="http://jenkins.hcmc.uvic.ca/job/MoEML/lastSuccessfulBuild/artifact/static/site/xml/standard/*zip*/standard.zip" dest="moeml/standard.zip" verbose="true"/>
         <unzip src="moeml/standard.zip" dest="moeml"/>
         <dirname property="moemlDirFull" file="moeml/standard.zip"/>
         <delete file="moeml/standard.zip"/>

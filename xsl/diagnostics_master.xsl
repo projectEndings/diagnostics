@@ -660,7 +660,7 @@
                                             <xsl:choose>
                                                 <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
                                                     <!--Do nothing-->
-                                                    <xsl:message select="concat('Found match for:', $fullTargCanonical)"/>
+                                                    <!--<xsl:message select="concat('Found match for:', $fullTargCanonical)"/>-->
                                                 </xsl:when>
                                                
                                                 <xsl:when test="
@@ -906,7 +906,7 @@
         <xsl:param name="uri" as="xs:string?"/>
         <xsl:variable name="extension" select="replace($uri, '.+\.([^\./]+)$', '$1')"/>
        <!-- <xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>-->
-        <xsl:message>URI to check is: <xsl:value-of select="$uri"/></xsl:message>
+        <!--<xsl:message>URI to check is: <xsl:value-of select="$uri"/></xsl:message>-->
         <xsl:choose>
             <xsl:when test="$extension = $xmlFileExtensions">
                 <!--<xsl:message>Checking <xsl:value-of select="$uri"/></xsl:message>-->
@@ -959,7 +959,7 @@
         <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/'),'')"/>
         <xsl:variable name="regex" select="replace(concat('^file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
         
-        <xsl:message select="$regex"/>
+        <!--<xsl:message select="$regex"/>-->
         <xsl:value-of select="$regex"/>
     </xsl:function>
     <!--Sample: file:/Users/joeytakeda/projectEndings/diagnostics/\./test/website_structure_standalone_test.xml#clickToZoomCaption-->

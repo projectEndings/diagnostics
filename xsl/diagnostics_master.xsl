@@ -649,6 +649,10 @@
                                                 then $thisToken
                                                 else resolve-uri($thisToken, $thisDocUri)"/>
                                             
+                                            <!--<xsl:message>$thisToken = <xsl:value-of select="$thisToken"/>; 
+                                                $thisDocUri = <xsl:value-of select="$thisDocUri"/>
+                                            </xsl:message>-->
+                                            
                                             <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
                                             <xsl:variable name="fullTarget"
                                                 select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
@@ -902,6 +906,7 @@
         <xsl:param name="uri" as="xs:string?"/>
         <xsl:variable name="extension" select="replace($uri, '.+\.([^\./]+)$', '$1')"/>
        <!-- <xsl:message>Found extensions <xsl:value-of select="$extension"/></xsl:message>-->
+        <xsl:message>URI to check is: <xsl:value-of select="$uri"/></xsl:message>
         <xsl:choose>
             <xsl:when test="$extension = $xmlFileExtensions">
                 <!--<xsl:message>Checking <xsl:value-of select="$uri"/></xsl:message>-->

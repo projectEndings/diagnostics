@@ -8,8 +8,8 @@
         
         ANT FILE FOR TEI PROJECT DIAGNOSTICS.
         
-        See diagnostics/README.txt for instructions
-        on how to run this diagnostics suite.
+        See diagnostics/README.md and diagnostics/instructions.html 
+        for instructions on how to run this diagnostics suite.
         
         Note that this assume oXygen version 17.0 or
         higher. 

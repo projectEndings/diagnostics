@@ -656,6 +656,7 @@
                                             <xsl:choose>
                                                 <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
                                                     <!--Do nothing-->
+                                                    <xsl:message select="concat('Found match for:', $fullTargCanonical)"/>
                                                 </xsl:when>
                                                
                                                 <xsl:when test="
@@ -947,8 +948,14 @@
     <xsl:function name="hcmc:makeRegex" as="xs:string">
         <xsl:param name="strings"/>
         <xsl:param name="baseDir"/>
-        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:',$baseDir,'/'),'')"/>
-        <xsl:value-of select="replace(concat('^file:',$baseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
+        <xsl:variable name="escapedBaseDir" select="replace($baseDir, '\\', '/')"/>
+        <!--<xsl:message><xsl:value-of select="string-join($strings, '&#x0a;')"/></xsl:message>
+        <xsl:message><xsl:value-of select="$baseDir"/></xsl:message>-->
+        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/'),'')"/>
+        <xsl:variable name="regex" select="replace(concat('^file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
+        
+        <xsl:message select="$regex"/>
+        <xsl:value-of select="$regex"/>
     </xsl:function>
     <!--Sample: file:/Users/joeytakeda/projectEndings/diagnostics/\./test/website_structure_standalone_test.xml#clickToZoomCaption-->
     

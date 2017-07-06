@@ -18,8 +18,19 @@
         <xd:desc>
             <xd:p><xd:b>Started on:</xd:b> February 22, 2017</xd:p>
             <xd:p><xd:b>Authors:</xd:b> <xd:a href="http://mapoflondon.uvic.ca/HOLM3.htm">mholmes</xd:a>, <xd:a href="http://mapoflondon.uvic.ca/TAKE1.htm">jtakeda</xd:a>.</xd:p>
-            <xd:p> This XSLT produces the necessary pages for the diagnostics report. It calls upon
-                a statistics module and a diagnostics module. </xd:p>
+            <xd:p> 
+                This XSLT produces the necessary pages for the diagnostics report. It calls upon
+                a statistics module and a diagnostics module. 
+            </xd:p>
+            <xd:p>
+                Note that there are a lot of potential problems surrounding the differences between
+                file system paths on *NIX vs Windows platforms. It appears to be the case that on
+                Windows, the slash is sometimes omitted after "file:" when you retrieve a document-uri,
+                but on *NIX it's not; this seems to be unpredictable, so there are places where a slash
+                is added when it's missing. The popup Java dir selector dialog box does not work on 
+                Windows, but it's not clear why. If you pass the path to the projectDir at the command
+                line as in the instructions, though, it works.
+            </xd:p>
         </xd:desc>
         <xd:param name="projectDirectory">
             <xd:p>The directory that contains all of the XML documents to be analyzed.</xd:p>
@@ -581,10 +592,12 @@
     
     
     
-    
-    <!--Bad internal links by pointer uses the distinct values
+
+    <xd:doc scope="component">
+        <xd:desc>Bad internal links by pointer uses the distinct values
         of pointers in each document and then uses a key to find
-        all the attributes that use that pointer.-->
+        all the attributes that use that pointer.</xd:desc>
+    </xd:doc>
     <xsl:template name="badInternalLinksByPointer" as="element(xh:div)">
         <xsl:message>Checking for bad internal links...</xsl:message>
         <xsl:variable name="output" as="element(xh:ul)*">
@@ -848,6 +861,10 @@
         <xd:param name="token">
             <xd:p>A referencing token with a private URI.</xd:p>
         </xd:param>
+        <xd:param name="sourceDoc">
+            <xd:p>The document node of a source document in which a 
+            prefix occurs.</xd:p>
+        </xd:param>
         <xd:return>
             <xd:p>If the private URI for the token can be resolved,
             then return the resolved token. Otherwise, do nothing
@@ -901,6 +918,9 @@
                 but for the moment we'll just give up on checking the existence of binaries.
             </xd:p>
         </xd:desc>
+        <xd:param name="uri">
+            <xd:p>The URI of the document which is being checked.</xd:p>
+        </xd:param>
     </xd:doc>
     <xsl:function name="hcmc:fileExists" as="xs:boolean">
         <xsl:param name="uri" as="xs:string?"/>
@@ -949,6 +969,15 @@
             (which in this case are paths) into a long regex 
             which can be used to check them quickly.
         </xd:desc>
+        <xd:param name="strings">
+            <xd:p>Sequence of xs:strings which are paths;
+            these are to be turned into a regular expression.</xd:p>
+        </xd:param>
+        <xd:param name="baseDir">
+            <xd:p>The base directory which we expect will be the 
+            first part of most of these paths; this can be used to
+            create a more efficient regex.</xd:p>
+        </xd:param>
     </xd:doc>
     <xsl:function name="hcmc:makeRegex" as="xs:string">
         <xsl:param name="strings"/>

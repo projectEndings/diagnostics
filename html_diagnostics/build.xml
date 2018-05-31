@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." name="" default="all">
+  
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+    <property name="projectDir" value=""/>
+  
+    <property name="echo.separator" value="*********************************************"/>
+    
+    <property name="suffix" value="html"/>
+    <tstamp>
+        <format property="date" pattern="yyyy-MM-dd" locale="en"/>
+    </tstamp>
+    
+    <condition property="isWindows" value="true">
+        <os family="windows"/>
+    </condition>
+    
+    <condition property="isUnix">
+        <os family="unix" />
+    </condition>
+    
+    <condition property="promptForFile">
+        <equals arg1="${projectDir}" arg2=""/>
+    </condition>
+  
+    <target name="setup" depends="convertForUnix, convertForWindows">
+        <description>
+            TARGET: setup
+            This task creates a diagnostics directory in the projectFolder.
+        </description>
+        
+        <echo message="Input: ${projectDir}"/>
+        <echo message="Input after conversion: ${projectDirFull}"/>
+        <echo message="Output dir: ${outputDir}"/>
+        
+        <fail message="Aborting. Directory selection was cancelled.">
+            <condition>
+                <equals arg1="${projectDirFull}" arg2=""/>
+            </condition>
+        </fail>
+        <fail message="Project directory not found. Please check input: ${projectDir}.">
+            <condition>
+                <not>
+                    <available file="${projectDirFull}" type="dir"/>
+                </not>
+            </condition>
+        </fail>
+        
+        
+        
+        <echo message="Executing diagnostics on directory ${projectDirFull}"/>
+        <echo message="Creating diagnostics directory: ${outputDir}"/>
+        <mkdir dir="${outputDir}"/>
+    </target>
+    
+    <target name="getDirectory" if="${promptForFile}">
+        <script language="javascript">
+            <![CDATA[
+                var chooser = new javax.swing.JFileChooser();
+                chooser.setDialogTitle("Choose the directory containing your TEI files");
+                chooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
+                //chooser.setCurrentDirectory(new java.io.File("."));
+                if (chooser.showOpenDialog(null) == javax.swing.JFileChooser.APPROVE_OPTION) { 
+                    dir = chooser.getSelectedFile();
+                	project.setProperty('projectDir', dir);
+                }
+                else{
+                    project.setProperty('projectDir', '');
+                }
+            ]]>
+        </script>
+        <echo>You chose this directory: ${projectDir}.</echo>
+    </target>
+    
+    
+    <target name="convertForWindows" if="${isWindows}">
+        <pathconvert property="projectDirFull" targetos="windows">
+            <path path="${projectDir}"/>
+            <identitymapper/>
+        </pathconvert>
+        <property name="outputDir" value="${projectDirFull}\diagnostics_${date}"/>
+    </target>
+    
+    <target name="convertForUnix" if="${isUnix}">
+        <pathconvert property="projectDirFull" targetos="unix">
+            <path path="${projectDir}"/>
+            <identitymapper/>
+        </pathconvert>
+        <property name="outputDir" value="${projectDirFull}/diagnostics_${date}"/>
+    </target>
+    
+ 
+    
+    <target name="checkInternalLinks">
+        
+        <delete dir="${outputDir}"/>
+      
+
+        
+        <xslt style="list_links2.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension=".txt">
+            <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+            <param name="projectDirectory" expression="${projectDirFull}"/>
+            <param name="fileList" expression="${my.files}"/>
+            <param name="line.separator" expression="${line.separator}"/>
+            <param name="suffix" expression="${suffix}"/>
+            <param name="outputDir" expression="${outputDir}/tmpLinksTxt"/>
+            <fileset dir="${projectDirFull}">
+                <include name="**/**.${suffix}"/>
+              <!--  <exclude name="**/spelling_variants.htm"/>-->
+                <exclude name="**/google**.html"/>
+            </fileset>
+        </xslt>
+        
+       
+        <concat destfile="${outputDir}/full.txt">
+            <fileset dir="${outputDir}/tmpLinksTxt">
+                <include name="**.txt"/>
+                <exclude name="**_ids.txt"/>
+            </fileset>
+        </concat>
+        
+        <loadresource property="uniques">
+            <file file="${outputDir}/full.txt"/>
+            <filterchain>
+                <sortfilter />
+                <uniqfilter />
+                <tokenfilter>
+                    <filetokenizer/>
+                </tokenfilter>
+            </filterchain>
+        </loadresource>
+        
+        <echo file="${outputDir}/unique.txt" message="${uniques}"/>
+        
+        <delete file="${outputDir}/full.txt"/>
+        
+        <pathconvert pathsep="${line.separator}"
+            property="my.files">
+            <path>
+                <fileset dir="${projectDir}">
+                    <include name="**/**"/>
+                    <exclude name="**/diagnostics**"/>
+                </fileset>
+            </path>
+        </pathconvert>
+        
+        <echo file="${outputDir}/systemFiles.txt" message="${my.files}"/>
+        
+        <java classname="net.sf.saxon.Transform" classpath="../../../../svn/lemdo/lib/saxon9he.jar" fork="true">
+            <jvmarg value="-Xmx4000m"/>
+            <arg value="-s:check_links2.xsl"/>
+            <arg value="-xsl:check_links2.xsl"/>
+            <arg value="-o:temp.txt"/>
+            <arg value="projectDirectory=${projectDirFull}"/>
+            <arg value="outputDirectory=${outputDir}"/>
+            <arg value="currDate=${date}"/>
+            <arg value="line.separator=${line.separator}"/>
+            <arg value="uniques=${outputDir}/unique.txt"/>
+            <arg value="fileList=${outputDir}/systemFiles.txt"/>
+            <arg value="outputDir=${outputDir}/tmpLinksTxt"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+     
+    </target>
+    
+
+
+
+  
+ 
+
+
+    
+    <target name="all" depends="getDirectory, setup, checkInternalLinks"/>
+
+    
+</project>

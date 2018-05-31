@@ -6,51 +6,37 @@
     xpath-default-namespace="http://www.w3.org/1999/xhtml"
     xmlns:hcmc="http://hcmc.uvic.ca/ns" 
     version="2.0">
-    
-    <xsl:param name="projectDirectory"/>
-    <xsl:param name="suffix"/>
-    <xsl:param name="fileList"/>
-    <xsl:param name="line.separator"/>
-    <xsl:param name="outputDir"/>
-<!--    
-    <xsl:variable name="docPaths" select="for $n in tokenize($fileList,$line.separator) return if (matches($n,concat('\.',$suffix,'$'))) then $n else ()"/>-->
-    <xsl:variable name="currDoc" select="."/>
-    <xsl:variable name="currUri" select="document-uri($currDoc)"/>
-    <xsl:variable name="docId" select="substring-before(tokenize($currUri,'/')[last()],concat('.',$suffix))"/>
-    <xsl:variable name="documentRegex" select="'\.((xml)|(kml)|(html?)|(xsl),(rss))$'"/>
-    <xsl:variable name="textRegex" select="'\.((txt)|(md)|(css)|(js))$'"/>
+
+    <xsl:include href="global.xsl"/>
     
     <xsl:output method="text"/>
     
+    <xsl:variable name="allIds" select="descendant-or-self::*/@id"/>
+    
     <xsl:template match="/">
         <!--we do internal links in another pass-->
-        <xsl:variable name="links" select="distinct-values(//a[@href][not(matches(@href,'^((mailto:)|(https?:)|(null)|(#)|(javascript))'))]/@href/xs:string(.))"/>
-        
+        <xsl:variable name="links" select="for $n in distinct-values(//a[@href][not(matches(@href,'^((mailto:)|(https?:)|(null)|(#)|(javascript))'))]/@href/xs:string(.)) return normalize-space($n)" as="xs:string*"/>
+        <xsl:variable name="internalRefs" select="distinct-values(//a[@href][matches(@href,'^#')]/@href/xs:string(.))" as="xs:string*"/>
+        <!--This is the first result-document-->
         <xsl:for-each select="$links">
-            <xsl:variable name="uri" select="resolve-uri(hcmc:cleanUri(.),$currUri)"/>
+
+            <xsl:variable name="uri" select="resolve-uri(hcmc:cleanUri(.),$thisDocUri)"/>
+            <xsl:message>This link... <xsl:value-of select="$uri"/></xsl:message>
             <xsl:value-of select="$uri"/><xsl:value-of select="$line.separator"/>            
         </xsl:for-each>
-        <xsl:result-document href="{$outputDir}/{$docId}_ids.txt">
-            <xsl:message>Creating <xsl:value-of select="concat($outputDir,'/',$docId,'_ids.txt')"/></xsl:message>
-            <xsl:for-each select="//*[@id]/@id">
+        
+        <!--ALl of the ids-->
+        <xsl:result-document href="{$outputTxtDir}/{$thisDocId}_ids.txt" method="text">
+           <!-- <xsl:message>Creating <xsl:value-of select="concat($outputDir,'/',$docId,'_ids.txt')"/></xsl:message>-->
+            <xsl:for-each select="$allIds">
                 <xsl:value-of select="."/><xsl:value-of select="$line.separator"/>
             </xsl:for-each>
         </xsl:result-document>
-
+        
+        <xsl:result-document href="{$outputTxtDir}/{$thisDocId}_internalRefs.txt" method="text">
+            <xsl:value-of select="string-join($internalRefs,$line.separator)"/>
+        </xsl:result-document>
     </xsl:template>
     
-    <xsl:function name="hcmc:cleanUri">
-        <xsl:param name="string"/>
-        <xsl:choose>
-            <xsl:when test="contains($string,'?')">
-               
-                <xsl:value-of select="substring-before($string,'?')"/>
-      
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:value-of select="$string"/>
-            </xsl:otherwise>
-        </xsl:choose>
-        
-    </xsl:function>
+   
 </xsl:stylesheet>

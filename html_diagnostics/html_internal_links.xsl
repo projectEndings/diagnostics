@@ -11,81 +11,99 @@
         the site itself; this is mostly for an endings implementation.
         
         We could write a parallel, and more capacious that doesn't rely on a project specific regex, XSLT3.0 version, too-->
-    
-    <xsl:param name="projectDirectory"/>
-    <xsl:param name="fileList"/>
-    <xsl:param name="line.separator"/>
-    <xsl:param name="suffix"/>
-    
-    <xsl:variable name="thisDoc" select="."/>
 
     
-    <xsl:variable name="files" select="tokenize($fileList,$line.separator)"/>
+    <xsl:variable name="thisDoc" select="."/>
     
-    <xsl:variable name="fileRegex" select="concat('^',string-join(for $n in $files return concat('(',hcmc:escape-for-regex($n),')'),'|'),'$')"/>
+    <!--Now get the external references errors...-->
+
+    <xsl:variable name="currUri" select="document-uri(/)"/>
+    <xsl:variable name="docId" select="substring-before(tokenize($currUri,'/')[last()],concat('.',$suffix))"/>
+    <xsl:variable name="internalRefsFile" select="unparsed-text(concat($outputDir,'/',$docId,'.txt'))"/>
+    <xsl:variable name="internalRefs" select="tokenize($internalRefsFile,$line.separator)"/>
+    <xsl:variable name="localIds" select="tokenize(unparsed-text(concat($outputDir,'/',$docId,'_ids.txt')),$line.separator)"/>
+    <xsl:variable name="documentRegex" select="'\.((xml)|(kml)|(html?)|(xsl),(rss))(#.+)?$'"/>
+    <xsl:variable name="unparsedRegex" select="'\.((txt)|(md)|(css)|(js))$'"/>
+    <xsl:variable name="systemFiles" select="tokenize($fileList,$line.separator)"/>    
+    <xsl:variable name="systemFilesCount" select="count($systemFiles)"/>
+    
+    
     
     <xsl:template match="/">
-        <!--<xsl:message>This regex: <xsl:value-of select="$fileRegex"/></xsl:message>-->
-            <xsl:variable name="docUri" select="document-uri(root(.))"/>
-            <xsl:message>Checking <xsl:value-of select="document-uri(root(.))"/></xsl:message>
-            <xsl:variable name="links" select="distinct-values(//a[@href][not(matches(@href,'^((mailto:)|(https?:)|(null)|(#)|(javascript))'))]/@href/xs:string(.))"/>
-            
-<!--        <xsl:message><xsl:copy-of select="$fileRegex"/></xsl:message>-->
-            <xsl:for-each select="$links">
-                <xsl:variable name="thisLink" select="."/>
-                        <xsl:variable name="thisUri" select="resolve-uri($thisLink,$docUri)"/>
-                        <!--                <xsl:message>Checking this pointer: <xsl:value-of select="$thisUri"/></xsl:message>-->
+        <xsl:message>Found <xsl:value-of select="count($internalRefs)"/></xsl:message>
+        <xsl:variable name="result" as="xs:string*">
+            <xsl:for-each-group select="$internalRefs" group-by="hcmc:getBaseUri(.)">
+                <xsl:variable name="baseUri" select="current-grouping-key()"/>
+                <xsl:message>Checking this uri: <xsl:value-of select="$baseUri"/></xsl:message>
+                <xsl:variable name="groupItemsToCheck" select="for $n in current-group() return if (contains($n,'#')) then $n else ()"/>
+                <xsl:choose>
+                    <xsl:when test="hcmc:testAvailability($baseUri)">
                         <xsl:choose>
-                            <xsl:when test="matches($thisUri,concat('\.',$suffix,'#.+$'))">
-                                <xsl:variable name="thisDoc" select="concat(substring-before($thisUri,concat($suffix,'#')),$suffix)"/>
-                                <xsl:variable name="thisFrag" select="substring-after($thisUri,concat($thisDoc,'#'))"/>
-                                <!-- <xsl:message>This doc: <xsl:value-of select="$thisDoc"/></xsl:message>
-                        <xsl:message>This frag: <xsl:value-of select="$thisFrag"/></xsl:message>-->
-                                <xsl:variable name="thisDocument" select="document($thisDoc)"/>
-                                <xsl:variable name="hasId" select="if ($thisDocument/descendant-or-self::*[@id=$thisFrag]) then true() else false()" as="xs:boolean"/>
-                                <xsl:choose>
-                                    <xsl:when test="$hasId">
-                                        <!--                         <xsl:message>
-                                    Found the fragment!
-                                </xsl:message>-->
-                                    </xsl:when>
-                                    <xsl:otherwise>
-                                        <xsl:message>ERROR: Could not find frag! <xsl:value-of select="$thisUri"/></xsl:message>
-                                    </xsl:otherwise>
-                                </xsl:choose>
-                            </xsl:when>
-                            <xsl:when test="matches($thisUri,$fileRegex)">
-                                <!--                        <xsl:message>Found the document!</xsl:message>-->
+                            
+                            <xsl:when test="not(empty($groupItemsToCheck))">
+                                <xsl:message>Found fragments!</xsl:message>
+                                <!--Now we need to find the index!-->
+                                <xsl:variable name="thisDoc" select="unparsed-text(concat($outputDir,'/',$docId,'_ids.txt'))"/>
+                                <xsl:variable name="thisDocIds" select="tokenize($thisDoc,$line.separator)"/>
+                                <xsl:for-each select="$groupItemsToCheck">
+                                    <xsl:variable name="thisSubUri" select="."/>
+                                    <xsl:variable name="thisFrag" select="substring-after($thisSubUri,'#')"/>
+                                    <xsl:message>checking this frag <xsl:value-of select="$thisFrag"/></xsl:message>
+                                    <xsl:choose>
+                                        <xsl:when test="$thisDocIds[.=$thisFrag]">
+                                            <xsl:message>Frag found!</xsl:message>
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <xsl:message>Fragment not found!</xsl:message>
+                                            <xsl:value-of select="$thisSubUri"/>
+                                        </xsl:otherwise>
+                                    </xsl:choose>
+                                </xsl:for-each>
                             </xsl:when>
                             <xsl:otherwise>
-                                <xsl:message>ERROR: Could not find document: <xsl:value-of select="$thisUri"/></xsl:message>
+                                <xsl:value-of select="$baseUri"/>
                             </xsl:otherwise>
                         </xsl:choose>
-                
-            </xsl:for-each>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$baseUri"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:for-each-group>
+        </xsl:variable>
+       <xsl:result-document method="text">
+           ## External Errors
+           <xsl:sequence select="string-join($result,$line.separator)"/>
+           
+           ## Internal Errors
+            <xsl:sequence select="unparsed-text(concat($outputDir,'/',$docId,'_internalErrors.txt'))"/>
+       </xsl:result-document>
     </xsl:template>
     
-        <xsl:function name="hcmc:makeRegex" as="xs:string">
-            <xsl:param name="strings"/>
-            <xsl:param name="baseDir"/>            
-            <xsl:variable name="escapedBaseDir" select="replace($baseDir, '\\', '/')"/>
-            <!--<xsl:message><xsl:value-of select="string-join($strings, '&#x0a;')"/></xsl:message>
-        <xsl:message><xsl:value-of select="$baseDir"/></xsl:message>-->
-            <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/'),'')"/>
-            <xsl:variable name="regex" select="replace(concat('^file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
-            
-            <!--<xsl:message select="$regex"/>-->
-            <xsl:value-of select="$regex"/>
-        </xsl:function>
     
-    <xsl:function name="hcmc:escape-for-regex" as="xs:string">
-        <xsl:param name="arg" as="xs:string?"/>
+    <xsl:function name="hcmc:getBaseUri" as="xs:string">
+        <xsl:param name="uri"/>
+        <xsl:value-of select="if (contains($uri,'#')) then substring-before($uri,'#') else $uri"/>
+    </xsl:function>
+    
+    <xsl:function name="hcmc:testAvailability" as="xs:boolean">
+        <xsl:param name="uri"/>
+        <xsl:message>Testing availability of <xsl:value-of select="$uri"/></xsl:message>
+        <xsl:variable name="result" as="xs:boolean">
+            <xsl:choose>
+                <xsl:when test="$systemFiles[concat('file:',.)=$uri]">
+                    <xsl:value-of select="true()"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="false()"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <xsl:value-of select="$result"/>
+        <xsl:message><xsl:value-of select="$result"/></xsl:message>
         
-        <xsl:sequence select="
-            replace($arg,
-            '(\.|\[|\]|\\|\||\-|\^|\$|\?|\*|\+|\{|\}|\(|\))','\\$1')
-            "/>
         
     </xsl:function>
+  
     
 </xsl:stylesheet>

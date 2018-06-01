@@ -120,7 +120,7 @@
         <echo message="${echo.separator}"/>
         <echo message="First, index all references and ids..."/>
         <echo message="${echo.separator}"/>
-        <xslt style="list_links2.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_refs.txt">
+        <xslt style="create_indexes.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_refs.txt">
             <factory name="net.sf.saxon.TransformerFactoryImpl"/>
             <param name="projectDirectory" expression="${projectDirFull}"/>
             <param name="outputDir" expression="${outputDir}"/>
@@ -177,7 +177,7 @@
         <echo message="Now checking internal errors links (this might take a few minutes).."/>
         <echo message="${echo.separator}"/>
         
-        <xslt style="html_local_links.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_internalErrors.txt">
+        <xslt style="check_internal_refs.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_internalErrors.txt">
             <factory name="net.sf.saxon.TransformerFactoryImpl"/>
             <param name="projectDirectory" expression="${projectDirFull}"/>
             <param name="outputDir" expression="${outputDir}"/>
@@ -202,8 +202,8 @@
         <echo message="${echo.separator}"/>
         <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
             <jvmarg value="-Xmx4000m"/>
-            <arg value="-s:check_links2.xsl"/>
-            <arg value="-xsl:check_links2.xsl"/>
+            <arg value="-s:check_refs.xsl"/>
+            <arg value="-xsl:check_refs.xsl"/>
             <arg value="-o:${outputDir}/errors.txt"/>
             <arg value="projectDirectory=${projectDirFull}"/>
             <arg value="outputDir=${outputDir}"/>
@@ -244,8 +244,8 @@
         <echo message="${echo.separator}"/>
         <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
             <jvmarg value="-Xmx4000m"/>
-            <arg value="-s:create_html_diagnostics_output.xsl"/>
-            <arg value="-xsl:create_html_diagnostics_output.xsl"/>
+            <arg value="-s:create_report.xsl"/>
+            <arg value="-xsl:create_report.xsl"/>
             <arg value="-o:${outputDir}/html_diagnostics_report.html"/>
             <arg value="projectDirectory=${projectDirFull}"/>
             <arg value="outputDir=${outputDir}"/>

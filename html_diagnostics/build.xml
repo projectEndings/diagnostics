@@ -131,6 +131,7 @@
             <param name="suffix" expression="${suffix}"/>
             <param name="fileList" expression="${outputDir}/systemFiles.txt"/>
             <fileset dir="${projectDirFull}">
+                <include name="**.${suffix}"/>
                 <include name="**/**.${suffix}"/>
                 <!--                <exclude name="**/spelling_variants.htm"/>-->
                 <exclude name="**/google**.html"/>

@@ -12,14 +12,14 @@
     
     
     <xsl:template match="/">
-        <xsl:variable name="localLinks" select="//a[starts-with(@href,'#')]/@href/xs:string(.)"/>
+       <!-- <xsl:variable name="localLinks" select="//a[starts-with(@href,'#')]/@href/xs:string(.)"/>-->
         <xsl:variable name="out" as="xs:string*">
-            <xsl:for-each select="$thisDocRefs">
-<!--                <xsl:message>Processing <xsl:value-of select="."/></xsl:message>-->
+            <xsl:for-each select="$thisDocInternalRefs">
+                <xsl:message>Processing <xsl:value-of select="."/></xsl:message>
                 <xsl:choose>
                     <xsl:when test="substring-after(.,'#')=$thisDocIds"/>
                     <xsl:otherwise>
-<!--                        <xsl:message>Could not find.</xsl:message>-->
+                        <xsl:message>Could not find.</xsl:message>
                         <xsl:value-of select="."/>
                     </xsl:otherwise>
                 </xsl:choose>

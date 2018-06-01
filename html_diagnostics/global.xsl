@@ -69,6 +69,14 @@
     <!--And the lines-->
     <xsl:variable name="thisDocIds" select="hcmc:lineTokenize($thisDocIdsFile)"/>
     
+    <!--Where the refs document lives-->
+    <xsl:variable name="thisDocInternalRefsPath" select="concat($outputTxtDir,$thisDocLoc,'_internalRefs.txt')"/>
+    
+    <!--Now the text-->
+    <xsl:variable name="thisDocInternalRefsFile" select="hcmc:getText($thisDocInternalRefsPath)"/>
+    
+    <!--And the tokens-->
+    <xsl:variable name="thisDocInternalRefs" select="hcmc:lineTokenize($thisDocInternalRefsFile)" as="xs:string*"/>
     
     <!--Where the errors document lives-->
     <xsl:variable name="siteErrorsFile" select="unparsed-text(concat($outputDir,'/errors.txt'))"/>
@@ -106,6 +114,7 @@
     
     <xsl:function name="hcmc:getText">
         <xsl:param name="uri"/>
+        <xsl:message>Looking for this URI <xsl:value-of select="$uri"/></xsl:message>
         <xsl:value-of select="if (unparsed-text-available($uri)) then unparsed-text($uri) else ()"/>
     </xsl:function>
     

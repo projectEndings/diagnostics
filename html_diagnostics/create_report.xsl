@@ -30,16 +30,13 @@
                 <body>
                     <div>
                         <h2>Broken Links</h2>
-                        <xsl:variable name="errors">
+                        <xsl:variable name="errors" as="element(xh:div)*">
                             <xsl:for-each select="$filenames">
                                 <xsl:variable name="thisFn" select="."/>
                              
                                 <!--A small more relative path-->
                                 <xsl:variable name="thisFnPath" select="substring-after($thisFn,$projectDirectory)"/>
                                 <xsl:variable name="thisFileLoc" select="substring-before($thisFnPath,concat('.',$suffix))"/>
-                                <xsl:message>This filename: <xsl:value-of select="$thisFn"/></xsl:message>
-                                <xsl:message>This file path: <xsl:value-of select="$thisFnPath"/></xsl:message>
-                                <xsl:message>This File Loc <xsl:value-of select="$thisFileLoc"/></xsl:message>
                                 <xsl:variable name="internalErrors" select="hcmc:lineTokenize(hcmc:getText(concat($outputTxtDir,$thisFileLoc,'_internalErrors.txt')))"/>
                                 <xsl:variable name="refErrors" select="hcmc:lineTokenize(hcmc:getText(concat($outputTxtDir,$thisFileLoc,'_refErrors.txt')))"/>
                                 <xsl:variable name="internalErrorsCount" select="count($internalErrors)"/>
@@ -77,8 +74,10 @@
                         
                         <xsl:message>Found <xsl:value-of select="count($errors//xh:li)"/> errors in <xsl:value-of select="count($filenames)"/> files.</xsl:message>
                         <xsl:message><xsl:value-of select="count(distinct-values($errors//xh:li/xs:string(.)))"/> are distinct errors.</xsl:message>
-                        
-                        <xsl:sequence select="$errors"/>
+                        <xsl:for-each select="$errors">
+                            <xsl:sort select="count(./descendant::xh:li)" order="descending"/>
+                            <xsl:copy-of select="."/>
+                        </xsl:for-each>
                         
                     </div>
                 </body>

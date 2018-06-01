@@ -10,20 +10,30 @@
     <xsl:output method="text"/>
     
     <xsl:template match="/">
-        <xsl:message>Initiating...</xsl:message>
+        <xsl:message>Checking all unique pointers...</xsl:message>
         <!--<xsl:message>Here is the count of files that we should be checking: <xsl:value-of select="count($filesToCheck)"/></xsl:message>-->
         <!--Okay, first do the easy ones-->
+        <xsl:variable name="uniqueRefsCount" select="count(distinct-values(for $n in $uniqueRefs return hcmc:getBaseUri($n)))"/>
         <xsl:variable name="out" as="xs:string*">
             <xsl:for-each-group select="$uniqueRefs" group-by="hcmc:getBaseUri(.)">
                 <xsl:variable name="baseUri" select="current-grouping-key()"/>
+                <xsl:variable name="currPos" select="position()"/>
+                <xsl:message>Checking <xsl:value-of select="$currPos"/>/<xsl:value-of select="$uniqueRefsCount"/></xsl:message>
                <!-- <xsl:message>Checking this uri: <xsl:value-of select="$baseUri"/></xsl:message>-->
                 <xsl:variable name="thisDocId" select="substring-before(tokenize($baseUri,'/')[last()],'.')"/>
                 <xsl:variable name="groupItemsToCheck" select="for $n in current-group() return if (contains($n,'#')) then $n else ()"/>
                 <xsl:choose>
                     <xsl:when test="hcmc:testAvailability($baseUri)">
                         <xsl:if test="not(empty($groupItemsToCheck))">
-                            <xsl:variable name="thisDoc" select="unparsed-text(concat($outputTxtDir,'/',$thisDocId,'_ids.txt'))"/>
-                            <xsl:variable name="thisDocIds" select="tokenize($thisDoc,$line.separator)"/>
+                            
+                            <!--Get the path after the project dir (i.e. my/project/this/file.html becomes /this/file.html)-->
+                            <xsl:variable name="relativePath" select="substring-after($baseUri,$projectDirectory)"/>
+                            
+                            <!--Now add the outputTxtDir path and get rid of the suffix (i.e. /this/file.html becomes my/project/this/outputDir/txt/this/file)-->
+                            <xsl:variable name="fullOutputDir" select="substring-before(concat($outputTxtDir,$relativePath),concat('.',$suffix))"/>
+
+                            <xsl:variable name="thisDocIdsFile" select="unparsed-text(concat($fullOutputDir,'_ids.txt'))"/>
+                            <xsl:variable name="thisDocIds" select="tokenize($thisDocIdsFile,$line.separator)"/>
                             <xsl:for-each select="$groupItemsToCheck">
                                 <xsl:variable name="thisSubUri" select="."/>
                                 <xsl:variable name="thisFrag" select="substring-after($thisSubUri,'#')"/>
@@ -33,7 +43,7 @@
                                         <!--    <xsl:message>Frag found!</xsl:message>-->
                                     </xsl:when>
                                     <xsl:otherwise>
-                                        <xsl:message>Fragment not found!</xsl:message>
+                                        <xsl:message>Could not find URI: <xsl:value-of select="$thisSubUri"/></xsl:message>
                                         <xsl:value-of select="$thisSubUri"/>
                                     </xsl:otherwise>
                                 </xsl:choose>

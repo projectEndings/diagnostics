@@ -51,6 +51,8 @@
     <!--The document id-->
     <xsl:variable name="thisDocId" select="tokenize($thisDocLoc,'/')[last()]"/>
     
+    <xsl:variable name="fullOutputDir" select="concat($outputTxtDir,$thisDocLoc)"/>
+    
     <!--Where the refs document lives-->
     <xsl:variable name="thisDocRefsPath" select="concat($outputTxtDir,$thisDocLoc,'_refs.txt')"/>
     
@@ -114,7 +116,7 @@
     
     <xsl:function name="hcmc:getText">
         <xsl:param name="uri"/>
-        <xsl:message>Looking for this URI <xsl:value-of select="$uri"/></xsl:message>
+        <!--<xsl:message>Looking for this URI <xsl:value-of select="$uri"/></xsl:message>-->
         <xsl:value-of select="if (unparsed-text-available($uri)) then unparsed-text($uri) else ()"/>
     </xsl:function>
     

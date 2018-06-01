@@ -21,19 +21,18 @@
         <xsl:for-each select="$links">
 
             <xsl:variable name="uri" select="resolve-uri(hcmc:cleanUri(.),$thisDocUri)"/>
-            <xsl:message>This link... <xsl:value-of select="$uri"/></xsl:message>
             <xsl:value-of select="$uri"/><xsl:value-of select="$line.separator"/>            
         </xsl:for-each>
         
         <!--ALl of the ids-->
-        <xsl:result-document href="{$outputTxtDir}/{$thisDocId}_ids.txt" method="text">
+        <xsl:result-document href="{$thisDocIdsPath}" method="text">
            <!-- <xsl:message>Creating <xsl:value-of select="concat($outputDir,'/',$docId,'_ids.txt')"/></xsl:message>-->
             <xsl:for-each select="$allIds">
                 <xsl:value-of select="."/><xsl:value-of select="$line.separator"/>
             </xsl:for-each>
         </xsl:result-document>
         
-        <xsl:result-document href="{$outputTxtDir}/{$thisDocId}_internalRefs.txt" method="text">
+        <xsl:result-document href="{$thisDocInternalRefsPath}" method="text">
             <xsl:value-of select="string-join($internalRefs,$line.separator)"/>
         </xsl:result-document>
     </xsl:template>

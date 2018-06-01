@@ -13,18 +13,11 @@
     
     <xsl:template match="/">
        <!-- <xsl:variable name="localLinks" select="//a[starts-with(@href,'#')]/@href/xs:string(.)"/>-->
-        <xsl:variable name="out" as="xs:string*">
-            <xsl:for-each select="$thisDocInternalRefs">
-              <!--  <xsl:message>Processing <xsl:value-of select="."/></xsl:message>-->
-                <xsl:choose>
-                    <xsl:when test="substring-after(.,'#')=$thisDocIds"/>
-                    <xsl:otherwise>
-                        <xsl:message>Could not find reference: <xsl:value-of select="."/></xsl:message>
-                        <xsl:value-of select="."/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:for-each>
-        </xsl:variable>
-        <xsl:value-of select="string-join($out,$line.separator)"/>
+        <xsl:variable name="cleanRefs" select="for $n in $thisDocInternalRefs return substring-after($n,'#')" as="xs:string*"/>
+        <xsl:variable name="errors" select="hcmc:compareSeq($cleanRefs,$thisDocIds)"/>
+        <xsl:if test="not(empty($errors))">
+            <xsl:message>Found <xsl:value-of select="count($errors)"/></xsl:message>
+            <xsl:value-of select="string-join($errors,$line.separator)"/>
+        </xsl:if>
     </xsl:template>
 </xsl:stylesheet>

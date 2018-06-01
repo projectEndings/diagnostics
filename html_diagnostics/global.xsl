@@ -6,7 +6,6 @@
     xmlns:hcmc="http://hcmc.uvic.ca/ns" 
     version="2.0">
     
-    
     <!--Parameters that have to be on every build-->
     
     <!--Should be seomthing like /Users/my/files/project/-->
@@ -30,6 +29,8 @@
     
     <!--And the list of docs to process-->
     <xsl:param name="docsToProcess"/>
+    
+    <xsl:param name="useEE" select="false()"/>
     
     
     <xsl:variable name="outputTxtDir" select="concat($outputDir,'/tmpLinksTxt')"/>
@@ -90,7 +91,7 @@
     <xsl:variable name="systemFilesDoc" select="hcmc:getText($fileList)"/> 
     
     <!--The lines-->
-    <xsl:variable name="systemFiles" select="hcmc:lineTokenize($systemFilesDoc)"/>
+    <xsl:variable name="systemFiles" select="for $n in hcmc:lineTokenize($systemFilesDoc) return concat('file:',$n)"/>
     
     <!--Count-->
     <xsl:variable name="systemFilesCount" select="count($systemFiles)"/>
@@ -130,7 +131,7 @@
         <xsl:param name="uri"/>
         <xsl:variable name="result" as="xs:boolean">
             <xsl:choose>
-                <xsl:when test="$systemFiles[concat('file:',.)=$uri]">
+                <xsl:when test="$systemFiles[.=$uri]">
                     <xsl:value-of select="true()"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -146,6 +147,14 @@
         <xsl:value-of select="if (contains($uri,'#')) then substring-before($uri,'#') else $uri"/>
     </xsl:function>
     
+    <!--This function compares two sequences and returns all of $seq1
+        that is not in $seq2-->
+    <!--Thanks to this: http://www.xsltfunctions.com/xsl/functx_value-except.html-->
+    <xsl:function name="hcmc:compareSeq" as="xs:string*">
+        <xsl:param name="seq1"/>
+        <xsl:param name="seq2"/>
+        <xsl:sequence select="$seq1[not(.=$seq2)]"/>
+    </xsl:function>
     
     
 </xsl:stylesheet>

@@ -17,19 +17,21 @@
     
     <xsl:template match="/">
         <!--<xsl:message>Processing this document: <xsl:value-of select="$thisDocId"/></xsl:message>-->
-        <xsl:variable name="pointerErrors" as="xs:string*">
+        
+        <xsl:variable name="pointerErrors" select="$thisDocRefs[.=$siteErrors]"/>
+        <!--<xsl:variable name="pointerErrors" as="xs:string*">
             <xsl:for-each select="$thisDocRefs">
                 <xsl:variable name="thisLine" select="."/>
-                <!--<xsl:message>Investigating this line: <xsl:value-of select="$thisLine"/></xsl:message>-->
+                <!-\-<xsl:message>Investigating this line: <xsl:value-of select="$thisLine"/></xsl:message>-\->
                 <xsl:choose>
                     <xsl:when test="$siteErrors[.=$thisLine]">
-                        <!--<xsl:message>!!!!!Found this error: <xsl:value-of select="$thisLine"/></xsl:message>-->
+                        <!-\-<xsl:message>!!!!!Found this error: <xsl:value-of select="$thisLine"/></xsl:message>-\->
                         <xsl:value-of select="$thisLine"/>
                     </xsl:when>
                     <xsl:otherwise/>
                 </xsl:choose>
             </xsl:for-each>
-        </xsl:variable>
+        </xsl:variable>-->
         <xsl:if test="not(empty($pointerErrors))">
             <xsl:value-of select="string-join($pointerErrors,$line.separator)"/>
         </xsl:if>

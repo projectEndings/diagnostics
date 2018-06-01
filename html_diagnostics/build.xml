@@ -6,6 +6,8 @@
   
     <property name="echo.separator" value="*********************************************"/>
     
+    
+    
     <property name="suffix" value="htm"/>
     <tstamp>
         <format property="date" pattern="yyyy-MM-dd" locale="en"/>
@@ -22,6 +24,10 @@
     <condition property="promptForFile">
         <equals arg1="${projectDir}" arg2=""/>
     </condition>
+    
+    <target name="clean">
+        <delete dir="${outputDir}"/>
+    </target>
   
     <target name="setup" depends="convertForUnix, convertForWindows">
         <description>
@@ -32,7 +38,6 @@
         <echo message="Input: ${projectDir}"/>
         <echo message="Input after conversion: ${projectDirFull}"/>
         <echo message="Output dir: ${outputDir}"/>
-        <delete dir="${outputDir}"/>
         
         <fail message="Aborting. Directory selection was cancelled.">
             <condition>
@@ -91,6 +96,10 @@
     </target>
     
     <target name="getPaths">
+        <description>This target creates and outputs the 
+        list of documents that are being transformed (i.e. the
+        HTM* fileset) and the list of files that are available in
+        the project folder.</description>
         <pathconvert pathsep="${line.separator}"
             property="transformedDocs">
             <path>
@@ -117,6 +126,11 @@
     </target>
     
     <target name="indexFiles">
+        <description>This target returns three text files:
+        1) $${docId}_refs.txt: this lists all of the a/@href values to other documents in the file system
+        2) $${docId}_internalRefs.txt: this lists all of the a/@href values to this document (i.e. hash references)
+        3) $${docId}_ids.txt: this lists all of the @ids in the file.
+        </description>
         <echo message="${echo.separator}"/>
         <echo message="First, index all references and ids..."/>
         <echo message="${echo.separator}"/>
@@ -142,6 +156,8 @@
     
    
     <target name="dedup">
+        <description>This target takes all of the unique ref files in the file system
+        and then concats them and creates a unique list of all references to check.</description>
         <echo message="${echo.separator}"/>
         <echo message="Concatenating all of the files..."/>
         <echo message="${echo.separator}"/>
@@ -156,6 +172,9 @@
         <echo message="${echo.separator}"/>
         <echo message="Getting unique list of references.."/>
         <echo message="${echo.separator}"/>
+        
+        
+        
         <loadresource property="uniques">
             <file file="${outputDir}/full.txt"/>
             <filterchain>
@@ -171,7 +190,7 @@
     </target>
     
     <target name="checkInternalRefs">
-        
+        <description>This target checks internal (i.e. hashed references) in the file.</description>
         
         <echo message="${echo.separator}"/>
         <echo message="Now checking internal errors links (this might take a few minutes).."/>
@@ -197,11 +216,14 @@
     
     
     <target name="checkRefs">
+        <description>This target uses an XSLT to go through the list of unique
+            references and see if that line matches another line in the projectDirectory
+            listing.</description>
         <echo message="${echo.separator}"/>
         <echo message="Now checking local errors links (this might take a few minutes).."/>
         <echo message="${echo.separator}"/>
         <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
-            <jvmarg value="-Xmx4000m"/>
+            <jvmarg value="-Xmx1024m"/>
             <arg value="-s:check_refs.xsl"/>
             <arg value="-xsl:check_refs.xsl"/>
             <arg value="-o:${outputDir}/errors.txt"/>
@@ -217,7 +239,26 @@
         </java>
     </target>
     
+    <target name="checkRefs2">
+        <xslt style="check_refs2.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_internalErrors.txt">
+            <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+            <param name="projectDirectory" expression="${projectDirFull}"/>
+            <param name="outputDir" expression="${outputDir}"/>
+            <param name="currDate" expression="${date}"/>
+            <param name="line.separator" expression="${line.separator}"/>
+            <param name="docsToProcess" expression="${outputDir}/transformedFiles.txt"/>
+            <param name="uniques" expression="${outputDir}/unique.txt"/>
+            <param name="suffix" expression="${suffix}"/>
+            <param name="fileList" expression="${outputDir}/systemFiles.txt"/>
+            <fileset dir="${projectDirFull}">
+                <include name="**/**.${suffix}"/>
+                <exclude name="**/google**.html"/>
+            </fileset>
+        </xslt>
+    </target>
+    
     <target name="compileErrors">
+        <description>This target identifies which files have errors.</description>
         <echo message="${echo.separator}"/>
         <echo message="Now compiling errors..."/>
         <echo message="${echo.separator}"/>
@@ -239,6 +280,7 @@
     </target>
     
     <target name="createReport">
+        <description>This target creates the HTML report for these diagnostics.</description>
         <echo message="${echo.separator}"/>
         <echo message="Creating report..."/>
         <echo message="${echo.separator}"/>
@@ -261,7 +303,7 @@
     </target>
     
     
-    <target name="checkInternalLinks" depends="getPaths, indexFiles, dedup, checkInternalRefs, checkRefs, compileErrors, createReport">
+    <target name="checkInternalLinks" depends="clean, getPaths, indexFiles, dedup, checkInternalRefs, checkRefs, compileErrors, createReport">
         <echo>Checking HTML referential integrity...</echo>
     </target>
 

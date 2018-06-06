@@ -84,6 +84,11 @@
     <!--Where the errors document lives-->
     <xsl:variable name="siteErrorsFile" select="unparsed-text(concat($outputDir,'/errors.txt'))"/>
     
+    <!--Error XML file-->
+    <xsl:variable name="xmlErrors" select="document(concat($outputDir,'/errors.xml'))"/>
+    
+    <!--Unique xml file-->
+    <xsl:variable name="uniquesXml" select="document(concat($outputDir,'/unique.xml'))"/>
     <!--And those errors-->
     <xsl:variable name="siteErrors" select="hcmc:lineTokenize($siteErrorsFile)"/>
     
@@ -145,6 +150,11 @@
     <xsl:function name="hcmc:getBaseUri" as="xs:string">
         <xsl:param name="uri"/>
         <xsl:value-of select="if (contains($uri,'#')) then substring-before($uri,'#') else $uri"/>
+    </xsl:function>
+    
+    <xsl:function name="hcmc:getRelativeUri" as="xs:string">
+        <xsl:param name="uri"/>
+        <xsl:value-of select="if (matches($uri,$projectDirectory)) then substring-after($uri,concat($projectDirectory,'/')) else $uri"/>
     </xsl:function>
     
     <!--This function compares two sequences and returns all of $seq1

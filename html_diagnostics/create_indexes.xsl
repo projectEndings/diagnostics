@@ -4,37 +4,49 @@
     xmlns:math="http://www.w3.org/2005/xpath-functions/math"
     exclude-result-prefixes="xs math"
     xpath-default-namespace="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.w3.org/1999/xhtml"
     xmlns:hcmc="http://hcmc.uvic.ca/ns" 
     version="2.0">
 
     <xsl:include href="global.xsl"/>
     
-    <xsl:output method="text"/>
+    <xsl:output method="xml"/>
     
     <xsl:variable name="allIds" select="descendant-or-self::*/@id"/>
+    <xsl:variable name="links" select="for $n in distinct-values(//a[@href][not(matches(@href,'^((mailto:)|(https?:)|(null)|(#)|(javascript))|(/$)'))]/@href/xs:string(.)) return normalize-space($n)" as="xs:string*"/>
     
+    <xsl:variable name="internalRefs" select="distinct-values(//a[@href][matches(@href,'^#')]/@href/xs:string(.))" as="xs:string*"/>
+    <xsl:variable name="thisDocumentHere" select="."/>
+    <xsl:key name="hash-to-id" use="concat('#',@xml:id)" match="*"/>
     <xsl:template match="/">
-        <!--we do internal links in another pass-->
-        <xsl:variable name="links" select="for $n in distinct-values(//a[@href][not(matches(@href,'^((mailto:)|(https?:)|(null)|(#)|(javascript))'))]/@href/xs:string(.)) return normalize-space($n)" as="xs:string*"/>
-        <xsl:variable name="internalRefs" select="distinct-values(//a[@href][matches(@href,'^#')]/@href/xs:string(.))" as="xs:string*"/>
-        <!--This is the first result-document-->
-        <xsl:for-each select="$links">
 
-            <xsl:variable name="uri" select="resolve-uri(hcmc:cleanUri(.),$thisDocUri)"/>
-            <xsl:value-of select="$uri"/><xsl:value-of select="$line.separator"/>            
-        </xsl:for-each>
-        
-        <!--ALl of the ids-->
-        <xsl:result-document href="{$thisDocIdsPath}" method="text">
-           <!-- <xsl:message>Creating <xsl:value-of select="concat($outputDir,'/',$docId,'_ids.txt')"/></xsl:message>-->
-            <xsl:for-each select="$allIds">
-                <xsl:value-of select="."/><xsl:value-of select="$line.separator"/>
-            </xsl:for-each>
+        <xsl:result-document href="{substring-before($thisDocRefsPath,'.txt')}.xml">
+            <ul id="references" data-doc="{$thisDocUri}">
+                <xsl:for-each select="$links">
+                    <xsl:variable name="uri" select="resolve-uri(hcmc:cleanUri(.),$thisDocUri)"/>
+                    <li><xsl:value-of select="$uri"/></li>
+                </xsl:for-each>
+            </ul>
         </xsl:result-document>
         
-        <xsl:result-document href="{$thisDocInternalRefsPath}" method="text">
-            <xsl:value-of select="string-join($internalRefs,$line.separator)"/>
+        <xsl:result-document href="{substring-before($thisDocIdsPath,'.txt')}.xml">
+            <ul id="ids" data-doc="{$thisDocUri}">
+                <xsl:for-each select="$allIds">
+                    <li><xsl:value-of select="."/></li>
+                </xsl:for-each>
+            </ul>
         </xsl:result-document>
+        
+        <xsl:result-document href="{substring-before($thisDocInternalRefsPath,'.txt')}.xml">
+            <ul id="internalRefs" data-doc="{$thisDocUri}">
+                <xsl:for-each select="$internalRefs">
+                    <li><xsl:value-of select="."/></li>
+                </xsl:for-each>
+            </ul>
+        </xsl:result-document>
+        
+        
+
     </xsl:template>
     
    

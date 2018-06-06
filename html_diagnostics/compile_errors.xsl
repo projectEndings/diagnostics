@@ -13,12 +13,25 @@
     <!--We're going doc by doc here-->
     
     
-    <xsl:output method="text"/>
-    
+    <xsl:output method="xml"/>
+    <xsl:variable name="xmlDocs" select="collection(concat($outputTxtDir,'?select=*.xml'))//references"/>
+    <xsl:variable name="distinctReferences" select="distinct-values($xmlDocs/descendant::*:ref/xs:string(normalize-space(.)))"/>
+
     <xsl:template match="/">
         <!--<xsl:message>Processing this document: <xsl:value-of select="$thisDocId"/></xsl:message>-->
+        <xsl:variable name="compileErrorsTest">
+            <xsl:for-each select="$thisDocRefs">
+                <xsl:choose>
+                    <xsl:when test="$uniquesXml//key('string-to-error',.)"/>
+                    <xsl:otherwise>
+                        <xsl:value-of select="."/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:for-each>
+        </xsl:variable>
         
-        <xsl:variable name="pointerErrors" select="$thisDocRefs[.=$siteErrors]"/>
+      <!--  <xsl:variable name="pointerErrors" select=""/>-->
+        <xsl:message>Checking <xsl:value-of select="count($thisDocRefs)"/> refs</xsl:message>
         <!--<xsl:variable name="pointerErrors" as="xs:string*">
             <xsl:for-each select="$thisDocRefs">
                 <xsl:variable name="thisLine" select="."/>
@@ -32,9 +45,18 @@
                 </xsl:choose>
             </xsl:for-each>
         </xsl:variable>-->
-        <xsl:if test="not(empty($pointerErrors))">
-            <xsl:value-of select="string-join($pointerErrors,$line.separator)"/>
-        </xsl:if>
+     <!--   <xsl:if test="not(empty($xmlErrorTest))">
+            <xsl:message>Found errors!</xsl:message>
+            <xsl:message>
+                <xsl:for-each select="$xmlErrorTest">
+                    <xsl:value-of select="."/>
+                </xsl:for-each>
+            </xsl:message>
+           
+        </xsl:if>-->
+        <xsl:message>
+            <xsl:copy-of select="$compileErrorsTest"/>
+        </xsl:message>
     </xsl:template>
     
  

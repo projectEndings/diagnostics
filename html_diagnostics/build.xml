@@ -29,7 +29,7 @@
         <delete dir="${outputDir}"/>
     </target>
   
-    <target name="setup" depends="convertForUnix, convertForWindows">
+    <target name="setup" depends="getDirectory, convertForUnix, convertForWindows">
         <description>
             TARGET: setup
             This task creates a diagnostics directory in the projectFolder.
@@ -124,8 +124,32 @@
         </pathconvert>
         <echo file="${outputDir}/systemFiles.txt" message="${my.files}"/>
     </target>
+    <target name="createSystemXml">
+        <description>This target uses an XSLT to go through the list of unique
+            references and see if that line matches another line in the projectDirectory
+            listing.</description>
+        <echo message="${echo.separator}"/>
+        <echo message="Now checking local errors links (this might take a few minutes).."/>
+        <echo message="${echo.separator}"/>
+        <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
+            <jvmarg value="-Xmx1024m"/>
+            <arg value="-s:create_system_xml.xsl"/>
+            <arg value="-xsl:create_system_xml.xsl"/>
+            <arg value="-o:${outputDir}/system_files.xml"/>
+            <arg value="projectDirectory=${projectDirFull}"/>
+            <arg value="outputDir=${outputDir}"/>
+            <arg value="currDate=${date}"/>
+            <arg value="line.separator=${line.separator}"/>
+            <arg value="docsToProcess=${outputDir}/transformedFiles.txt"/>
+            <arg value="uniques=${outputDir}/unique.txt"/>
+            <arg value="suffix=${suffix}"/>
+            <arg value="fileList=${outputDir}/systemFiles.txt"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+    </target>
     
-    <target name="indexFiles">
+    
+    <target name="index">
         <description>This target returns three text files:
         1) $${docId}_refs.txt: this lists all of the a/@href values to other documents in the file system
         2) $${docId}_internalRefs.txt: this lists all of the a/@href values to this document (i.e. hash references)
@@ -134,7 +158,7 @@
         <echo message="${echo.separator}"/>
         <echo message="First, index all references and ids..."/>
         <echo message="${echo.separator}"/>
-        <xslt style="create_indexes.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_refs.txt">
+        <xslt style="create_indexes.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true">
             <factory name="net.sf.saxon.TransformerFactoryImpl"/>
             <param name="projectDirectory" expression="${projectDirFull}"/>
             <param name="outputDir" expression="${outputDir}"/>
@@ -152,6 +176,69 @@
             </fileset>
         </xslt>
     </target>
+    
+    <target name="checkInternal">
+        <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
+            <jvmarg value="-Xmx1024m"/>
+            <arg value="-s:check_internal_refs.xsl"/>
+            <arg value="-xsl:check_internal_refs.xsl"/>
+            <arg value="-o:${outputDir}/system_files.xml"/>
+            <arg value="projectDirectory=${projectDirFull}"/>
+            <arg value="outputDir=${outputDir}"/>
+            <arg value="currDate=${date}"/>
+            <arg value="line.separator=${line.separator}"/>
+            <arg value="docsToProcess=${outputDir}/transformedFiles.txt"/>
+            <arg value="uniques=${outputDir}/unique.txt"/>
+            <arg value="suffix=${suffix}"/>
+            <arg value="fileList=${outputDir}/systemFiles.txt"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+    </target>
+    
+    
+    <target name="createErrorXml">
+        <description>This target uses an XSLT to go through the list of unique
+            references and see if that line matches another line in the projectDirectory
+            listing.</description>
+        <echo message="${echo.separator}"/>
+        <echo message="Creating error XML..."/>
+        <echo message="${echo.separator}"/>
+        <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
+            <jvmarg value="-Xmx1024m"/>
+            <arg value="-s:index_references.xsl"/>
+            <arg value="-xsl:index_references.xsl"/>
+            <arg value="-o:${outputDir}/errors.xml"/>
+            <arg value="projectDirectory=${projectDirFull}"/>
+            <arg value="outputDir=${outputDir}"/>
+            <arg value="currDate=${date}"/>
+            <arg value="line.separator=${line.separator}"/>
+            <arg value="docsToProcess=${outputDir}/transformedFiles.txt"/>
+            <arg value="uniques=${outputDir}/unique.txt"/>
+            <arg value="suffix=${suffix}"/>
+            <arg value="fileList=${outputDir}/systemFiles.txt"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+    </target>
+    
+    <target name="compileAllErrors">
+        <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
+            <jvmarg value="-Xmx4000m"/>
+            <arg value="-s:compile_xml_errors.xsl"/>
+            <arg value="-xsl:compile_xml_errors.xsl"/>
+            <arg value="-o:${outputDir}/html_diagnostics_report.html"/>
+            <arg value="projectDirectory=${projectDirFull}"/>
+            <arg value="outputDir=${outputDir}"/>
+            <arg value="currDate=${date}"/>
+            <arg value="line.separator=${line.separator}"/>
+            <arg value="docsToProcess=${outputDir}/transformedFiles.txt"/>
+            <arg value="uniques=${outputDir}/unique.txt"/>
+            <arg value="suffix=${suffix}"/>
+            <arg value="fileList=${outputDir}/systemFiles.txt"/>
+            <arg value="--suppressXsltNamespaceCheck:on"/>
+        </java>
+    </target>
+    
+    <target name="all" depends="setup, clean, getPaths, index, checkInternal, createSystemXml, createErrorXml, compileAllErrors"/>
     
     
    
@@ -189,30 +276,7 @@
         <echo file="${outputDir}/unique.txt" message="${uniques}"/>
     </target>
     
-    <target name="checkInternalRefs">
-        <description>This target checks internal (i.e. hashed references) in the file.</description>
-        
-        <echo message="${echo.separator}"/>
-        <echo message="Now checking internal errors links (this might take a few minutes).."/>
-        <echo message="${echo.separator}"/>
-        
-        <xslt style="check_internal_refs.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_internalErrors.txt">
-            <factory name="net.sf.saxon.TransformerFactoryImpl"/>
-            <param name="projectDirectory" expression="${projectDirFull}"/>
-            <param name="outputDir" expression="${outputDir}"/>
-            <param name="currDate" expression="${date}"/>
-            <param name="line.separator" expression="${line.separator}"/>
-            <param name="docsToProcess" expression="${outputDir}/transformedFiles.txt"/>
-            <param name="uniques" expression="${outputDir}/unique.txt"/>
-            <param name="suffix" expression="${suffix}"/>
-            <param name="fileList" expression="${outputDir}/systemFiles.txt"/>
-            <fileset dir="${projectDirFull}">
-                <include name="**/**.${suffix}"/>
-                <exclude name="**/google**.html"/>
-            </fileset>
-        </xslt>
-        
-    </target>
+    
     
     
     <target name="checkRefs">
@@ -257,12 +321,12 @@
         </xslt>
     </target>
     
-    <target name="compileErrors">
+    <target name="compileErrorsOLD">
         <description>This target identifies which files have errors.</description>
         <echo message="${echo.separator}"/>
         <echo message="Now compiling errors..."/>
         <echo message="${echo.separator}"/>
-        <xslt style="compile_errors.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_refErrors.txt">
+        <xslt style="compile_errors.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="false" extension="_refErrors.txt">
             <factory name="net.sf.saxon.TransformerFactoryImpl"/>
             <param name="projectDirectory" expression="${projectDirFull}"/>
             <param name="outputDir" expression="${outputDir}"/>
@@ -303,11 +367,6 @@
     </target>
     
     
-    <target name="checkInternalLinks" depends="clean, getPaths, indexFiles, dedup, checkInternalRefs, checkRefs, compileErrors, createReport">
-        <echo>Checking HTML referential integrity...</echo>
-    </target>
-
-    <target name="all" depends="getDirectory, setup, checkInternalLinks"/>
 
     
 </project>

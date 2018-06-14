@@ -12,15 +12,17 @@
     
     <xsl:output method="xml"/>
     
+    <xsl:key name="hash-to-id" use="concat('#',@xml:id)" match="*"/>
+    
     <xsl:variable name="allIds" select="descendant-or-self::*/@id"/>
     <xsl:variable name="links" select="for $n in distinct-values(//a[@href][not(matches(@href,'^((mailto:)|(https?:)|(null)|(#)|(javascript))|(/$)'))]/@href/xs:string(.)) return normalize-space($n)" as="xs:string*"/>
     
     <xsl:variable name="internalRefs" select="distinct-values(//a[@href][matches(@href,'^#')]/@href/xs:string(.))" as="xs:string*"/>
-    <xsl:variable name="thisDocumentHere" select="."/>
-    <xsl:key name="hash-to-id" use="concat('#',@xml:id)" match="*"/>
-    <xsl:template match="/">
+    <xsl:variable name="thisDocUri" select="document-uri(.)"/>
+    <xsl:variable name="thisOutUri" select="hcmc:getOutputUriNe($thisDocUri)"/>
 
-        <xsl:result-document href="{substring-before($thisDocRefsPath,'.txt')}.xml">
+    <xsl:template match="/">
+        <xsl:result-document href="{$thisOutUri}_refs.xml">
             <ul id="references" data-doc="{$thisDocUri}">
                 <xsl:for-each select="$links">
                     <xsl:variable name="uri" select="resolve-uri(hcmc:cleanUri(.),$thisDocUri)"/>
@@ -29,7 +31,7 @@
             </ul>
         </xsl:result-document>
         
-        <xsl:result-document href="{substring-before($thisDocIdsPath,'.txt')}.xml">
+        <xsl:result-document href="{$thisOutUri}_ids.xml">
             <ul id="ids" data-doc="{$thisDocUri}">
                 <xsl:for-each select="$allIds">
                     <li><xsl:value-of select="."/></li>
@@ -37,7 +39,7 @@
             </ul>
         </xsl:result-document>
         
-        <xsl:result-document href="{substring-before($thisDocInternalRefsPath,'.txt')}.xml">
+        <xsl:result-document href="{$thisOutUri}_internalRefs.xml">
             <ul id="internalRefs" data-doc="{$thisDocUri}">
                 <xsl:for-each select="$internalRefs">
                     <li><xsl:value-of select="."/></li>

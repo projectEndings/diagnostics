@@ -3,6 +3,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:math="http://www.w3.org/2005/xpath-functions/math"
     exclude-result-prefixes="xs math"
+    xmlns:xh="http://www.w3.org/1999/xhtml"
     xmlns:hcmc="http://hcmc.uvic.ca/ns" 
     version="2.0">
     
@@ -30,83 +31,40 @@
     <!--And the list of docs to process-->
     <xsl:param name="docsToProcess"/>
     
+    <!--Current date-->
+    <xsl:param name="currDate"/>
+    
     <xsl:param name="useEE" select="false()"/>
     
     
+    <!--DIRECTORIES-->
+    
+    <!--The base output dir-->
     <xsl:variable name="outputTxtDir" select="concat($outputDir,'/tmpLinksTxt')"/>
     
-    <!--Current date-->
-    <xsl:param name="currDate"/>
-    <!--Doc-->
-    <xsl:variable name="thisDoc" select="."/>
+    <!--FILES-->
     
-    <!--Doc uri-->
-    <xsl:variable name="thisDocUri" select="document-uri(.)"/>
+    <!--First simple lists-->
+    <xsl:variable name="systemFilesTxt" select="unparsed-text(concat($outputDir,'/system_files.txt'))"/>
+    <xsl:variable name="systemFilesPath" select="concat($outputDir,'/system_files.xml')"/>
+    <xsl:variable name="systemFilesDoc" select="document($systemFilesPath)/xh:ul"/>
     
-    <!--A small more relative path-->
-    <xsl:variable name="thisDocPath" select="substring-after($thisDocUri,$projectDirectory)"/>
+    <!--Index collections-->
+    <xsl:variable name="refDocs" select="collection(concat($outputTxtDir,'?select=*_refs.xml&amp;recurse=yes'))"/>
+    <xsl:variable name="idDocs" select="collection(concat($outputTxtDir,'?select=*_ids.xml&amp;recurse=yes'))"/>
+    <xsl:variable name="internalRefsDocs" select="collection(concat($outputTxtDir,'?select=*_internalRefs.xml&amp;recurse=yes'))"/>
     
-    <!--Where my doc is-->
-    <xsl:variable name="thisDocLoc" select="substring-before($thisDocPath,concat('.',$suffix))"/>
     
-    <!--The document id-->
-    <xsl:variable name="thisDocId" select="tokenize($thisDocLoc,'/')[last()]"/>
+    <!--Error files-->
+    <xsl:variable name="errorsPath" select="concat($outputDir,'/errors.xml')"/>
+    <xsl:variable name="errorsDoc" select="document($errorsPath)"/>
     
-    <xsl:variable name="fullOutputDir" select="concat($outputTxtDir,$thisDocLoc)"/>
+    <xsl:variable name="internalErrorsPath" select="concat($outputDir,'/internalErrors.xml')"/>
+    <xsl:variable name="internalErrorsDoc" select="document($internalErrorsPath)"/>
     
-    <!--Where the refs document lives-->
-    <xsl:variable name="thisDocRefsPath" select="concat($outputTxtDir,$thisDocLoc,'_refs.txt')"/>
-    
-    <!--Now the text-->
-    <xsl:variable name="thisDocRefsFile" select="hcmc:getText($thisDocRefsPath)"/>
-    
-    <!--And the tokens-->
-    <xsl:variable name="thisDocRefs" select="hcmc:lineTokenize($thisDocRefsFile)" as="xs:string*"/>
-    
-    <!--And the ids document-->
-    <xsl:variable name="thisDocIdsPath" select="concat($outputTxtDir,$thisDocLoc,'_ids.txt')"/>
-    
-    <!--The document-->
-    <xsl:variable name="thisDocIdsFile" select="hcmc:getText($thisDocIdsPath)"/>
-    
-    <!--And the lines-->
-    <xsl:variable name="thisDocIds" select="hcmc:lineTokenize($thisDocIdsFile)"/>
-    
-    <!--Where the refs document lives-->
-    <xsl:variable name="thisDocInternalRefsPath" select="concat($outputTxtDir,$thisDocLoc,'_internalRefs.txt')"/>
-    
-    <!--Now the text-->
-    <xsl:variable name="thisDocInternalRefsFile" select="hcmc:getText($thisDocInternalRefsPath)"/>
-    
-    <!--And the tokens-->
-    <xsl:variable name="thisDocInternalRefs" select="hcmc:lineTokenize($thisDocInternalRefsFile)" as="xs:string*"/>
-    
-    <!--Where the errors document lives-->
-    <xsl:variable name="siteErrorsFile" select="unparsed-text(concat($outputDir,'/errors.txt'))"/>
-    
-    <!--Error XML file-->
-    <xsl:variable name="xmlErrors" select="document(concat($outputDir,'/errors.xml'))"/>
-    
-    <!--Unique xml file-->
-    <xsl:variable name="uniquesXml" select="document(concat($outputDir,'/unique.xml'))"/>
-    <!--And those errors-->
-    <xsl:variable name="siteErrors" select="hcmc:lineTokenize($siteErrorsFile)"/>
-    
-    <!--The files-->
-    <xsl:variable name="systemFilesDoc" select="hcmc:getText($fileList)"/> 
-    
-    <!--The lines-->
-    <xsl:variable name="systemFiles" select="for $n in hcmc:lineTokenize($systemFilesDoc) return concat('file:',$n)"/>
-    
-    <!--Count-->
-    <xsl:variable name="systemFilesCount" select="count($systemFiles)"/>
-    
-    <!--Unique refs-->
-    <xsl:variable name="uniqueRefs" select="hcmc:lineTokenize(hcmc:getText($uniques))[not(.='')]" as="xs:string*"/>
-    
-    <!--Count-->
-    <xsl:variable name="uniqueRefsCount" select="count($uniqueRefs)"/>
 
+   
+    
     
     <xsl:function name="hcmc:cleanUri">
         <xsl:param name="string"/>
@@ -132,21 +90,7 @@
     </xsl:function>
 
     
-    <xsl:function name="hcmc:testAvailability" as="xs:boolean">
-        <xsl:param name="uri"/>
-        <xsl:variable name="result" as="xs:boolean">
-            <xsl:choose>
-                <xsl:when test="$systemFiles[.=$uri]">
-                    <xsl:value-of select="true()"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:value-of select="false()"/>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
-        <xsl:value-of select="$result"/>
-    </xsl:function>
-    
+   
     <xsl:function name="hcmc:getBaseUri" as="xs:string">
         <xsl:param name="uri"/>
         <xsl:value-of select="if (contains($uri,'#')) then substring-before($uri,'#') else $uri"/>
@@ -155,6 +99,11 @@
     <xsl:function name="hcmc:getRelativeUri" as="xs:string">
         <xsl:param name="uri"/>
         <xsl:value-of select="if (matches($uri,$projectDirectory)) then substring-after($uri,concat($projectDirectory,'/')) else $uri"/>
+    </xsl:function>
+    
+    <xsl:function name="hcmc:getOutputUriNe" as="xs:string">
+        <xsl:param name="uri"/>
+        <xsl:value-of select="substring-before(concat($outputTxtDir,substring-after($uri,$projectDirectory)),concat('.',$suffix))"/>
     </xsl:function>
     
     <!--This function compares two sequences and returns all of $seq1

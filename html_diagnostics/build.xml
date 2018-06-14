@@ -7,7 +7,7 @@
     <property name="echo.separator" value="*********************************************"/>
     
     
-    
+    <property name="byDoc" value="true"/>
     <property name="suffix" value="htm"/>
     <tstamp>
         <format property="date" pattern="yyyy-MM-dd" locale="en"/>
@@ -24,6 +24,18 @@
     <condition property="promptForFile">
         <equals arg1="${projectDir}" arg2=""/>
     </condition>
+    
+    <fileset id="docsToCheck" dir="${projectDirFull}">
+        <include name="**.${suffix}"/>
+        <include name="**/**.${suffix}"/>
+        <exclude name="**/google**.html"/>
+    </fileset>
+    
+    <fileset id="systemFiles" dir="${projectDirFull}">
+        <include name="**"/>
+        <exclude name="**.${suffix}"/>
+        <exclude name="**/**.${suffix}"/>
+    </fileset>
     
     <target name="clean">
         <delete dir="${outputDir}"/>
@@ -95,42 +107,24 @@
         <property name="outputDir" value="${projectDirFull}/diagnostics_${date}"/>
     </target>
     
-    <target name="getPaths">
-        <description>This target creates and outputs the 
-        list of documents that are being transformed (i.e. the
-        HTM* fileset) and the list of files that are available in
-        the project folder.</description>
-        <pathconvert pathsep="${line.separator}"
-            property="transformedDocs">
-            <path>
-                <fileset dir="${projectDirFull}">
-                    <include name="**/**.${suffix}"/>
-                    <exclude name="**/google**.html"/>
-                </fileset>
-            </path>
-        </pathconvert>
-        <echo message="${transformedDocs}" file="${outputDir}/transformedFiles.txt"/>
-        <echo message="${echo.separator}"/>
-        <echo message="Getting list of files in the file system..."/>
-        <echo message="${echo.separator}"/>
-        <pathconvert pathsep="${line.separator}"
-            property="my.files">
-            <path>
-                <fileset dir="${projectDir}">
-                    <include name="**/**"/>
-                    <exclude name="**/diagnostics**"/>
-                </fileset>
-            </path>
-        </pathconvert>
-        <echo file="${outputDir}/systemFiles.txt" message="${my.files}"/>
-    </target>
+    
     <target name="createSystemXml">
-        <description>This target uses an XSLT to go through the list of unique
-            references and see if that line matches another line in the projectDirectory
-            listing.</description>
-        <echo message="${echo.separator}"/>
-        <echo message="Now checking local errors links (this might take a few minutes).."/>
-        <echo message="${echo.separator}"/>
+            <description>This target creates and outputs the 
+                list of documents that are being transformed (i.e. the
+                HTM* fileset) and the list of files that are available in
+                the project folder.</description>
+            <echo message="Getting list of files in the file system..."/>
+            <echo message="${echo.separator}"/>
+            <pathconvert pathsep="${line.separator}"
+                property="my.files">
+                <path>
+                    <fileset dir="${projectDir}">
+                        <include name="**/**"/>
+                        <exclude name="**/diagnostics**"/>
+                    </fileset>
+                </path>
+            </pathconvert>
+            <echo file="${outputDir}/system_files.txt" message="${my.files}"/>
         <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
             <jvmarg value="-Xmx1024m"/>
             <arg value="-s:create_system_xml.xsl"/>
@@ -140,7 +134,6 @@
             <arg value="outputDir=${outputDir}"/>
             <arg value="currDate=${date}"/>
             <arg value="line.separator=${line.separator}"/>
-            <arg value="docsToProcess=${outputDir}/transformedFiles.txt"/>
             <arg value="uniques=${outputDir}/unique.txt"/>
             <arg value="suffix=${suffix}"/>
             <arg value="fileList=${outputDir}/systemFiles.txt"/>
@@ -196,12 +189,12 @@
     </target>
     
     
-    <target name="createErrorXml">
+    <target name="checkRefs">
         <description>This target uses an XSLT to go through the list of unique
             references and see if that line matches another line in the projectDirectory
             listing.</description>
         <echo message="${echo.separator}"/>
-        <echo message="Creating error XML..."/>
+        <echo message="Checking regular references..."/>
         <echo message="${echo.separator}"/>
         <java classname="net.sf.saxon.Transform" classpath="../utilities/saxon9he.jar" fork="true">
             <jvmarg value="-Xmx1024m"/>
@@ -234,11 +227,12 @@
             <arg value="uniques=${outputDir}/unique.txt"/>
             <arg value="suffix=${suffix}"/>
             <arg value="fileList=${outputDir}/systemFiles.txt"/>
+            <arg value="byDoc=${byDoc}"/>
             <arg value="--suppressXsltNamespaceCheck:on"/>
         </java>
     </target>
     
-    <target name="all" depends="setup, clean, getPaths, index, checkInternal, createSystemXml, createErrorXml, compileAllErrors"/>
+    <target name="all" depends="setup, clean, createSystemXml, index, checkInternal, checkRefs, compileAllErrors"/>
     
     
    
@@ -279,7 +273,7 @@
     
     
     
-    <target name="checkRefs">
+    <!--<target name="checkRefs">
         <description>This target uses an XSLT to go through the list of unique
             references and see if that line matches another line in the projectDirectory
             listing.</description>
@@ -299,9 +293,9 @@
             <arg value="uniques=${outputDir}/unique.txt"/>
             <arg value="suffix=${suffix}"/>
             <arg value="fileList=${outputDir}/systemFiles.txt"/>
-            <arg value="--suppressXsltNamespaceCheck:on"/>
+            <arg value="-\-suppressXsltNamespaceCheck:on"/>
         </java>
-    </target>
+    </target>-->
     
     <target name="checkRefs2">
         <xslt style="check_refs2.xsl" useimplicitfileset="no" destdir="${outputDir}/tmpLinksTxt" classpath="../utilities/saxon9he.jar" reloadstylesheet="true" extension="_internalErrors.txt">

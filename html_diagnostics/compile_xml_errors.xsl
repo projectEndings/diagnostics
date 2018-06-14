@@ -13,7 +13,7 @@
     <xsl:output method="xml"/>
     
     <!--A parameter-->
-    <xsl:param name="groupByDoc" select="false()"/>
+    <xsl:param name="byDoc" select="'true'"/>
     
     <xsl:variable name="xmlDocs" select="collection(concat($outputTxtDir,'?select=*_refs.xml'))"/>
     <xsl:variable name="errorXmlDoc" select="document(concat($outputDir,'/','errors.xml'))"/>
@@ -21,7 +21,7 @@
     <xsl:variable name="systemFilesXml" select="document(concat($outputDir,'/system_files.xml'))//ul"/>
 
     
-    <xsl:variable name="externalErrorDocs" select="distinct-values($errorXmlDoc//ul/lu/ul/li/text())"/>
+    <xsl:variable name="externalErrorDocs" select="distinct-values($errorXmlDoc//ul/li/ul/li/text())"/>
     <xsl:variable name="internalErrorDocs" select="distinct-values($internalErrorXmlDoc//ul[not(ancestor::ul)]/li/text())"/>
     
     <xsl:variable name="internalOnly" select="hcmc:compareSeq($internalErrorDocs,$externalErrorDocs)"/>
@@ -65,7 +65,7 @@
                         </table>
                     </div>
                     <xsl:choose>
-                        <xsl:when test="$groupByDoc">
+                        <xsl:when test="$byDoc='true'">
                             <xsl:for-each-group select="$errorXmlDoc//div/ul/li" group-by="ul/li">
                                 <xsl:variable name="thisDocName" select="current-grouping-key()"/>
                                 <xsl:variable name="currGroup" select="current-group()"/>
@@ -84,9 +84,12 @@
                                     <xsl:if test="not(empty($internalErrors))">
                                         <div>
                                             <h4>Internal Errors</h4>
-                                            <xsl:for-each select="$internalErrors/ul/li">
-                                                <li><xsl:value-of select="text()"/></li>
-                                            </xsl:for-each>
+                                            <ul>
+                                                <xsl:for-each select="$internalErrors/ul/li">
+                                                    <li><xsl:value-of select="text()"/></li>
+                                                </xsl:for-each>
+                                            </ul>
+                                            
                                         </div>
                                     </xsl:if>
                                 </div>
@@ -96,9 +99,14 @@
                                 <xsl:variable name="thisInternalDoc" select="."/>
                                 <div>
                                     <h3><xsl:value-of select="hcmc:getRelativeUri($thisInternalDoc)"/></h3>
-                                    <xsl:for-each select="$internalErrorXmlDoc//key('doc-to-internalError',$thisInternalDoc)/ul/li">
-                                        <li><xsl:value-of select="text()"/></li>
-                                    </xsl:for-each>
+                                    <div>
+                                        <h4>Internal Errors</h4>
+                                        <ul>
+                                            <xsl:for-each select="$internalErrorXmlDoc//key('doc-to-internalError',$thisInternalDoc)/ul/li">
+                                                <li><xsl:value-of select="text()"/></li>
+                                            </xsl:for-each>
+                                        </ul>
+                                    </div>
                                 </div>
                             </xsl:for-each>
                         </xsl:when>

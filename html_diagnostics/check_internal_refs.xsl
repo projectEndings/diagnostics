@@ -11,22 +11,23 @@
     <xsl:include href="global.xsl"/>
     
     
-    <xsl:variable name="idDocs" select="collection(concat($outputTxtDir,'?select=*_ids.xml'))//ul"/>
-    <xsl:variable name="hashDocs" select="collection(concat($outputTxtDir,'?select=*_internalRefs.xml'))//ul"/>
+    <xsl:variable name="ids" select="$idDocs//ul"/>
+    <xsl:variable name="internalRefs" select="$internalRefsDocs//ul"/>
     <xsl:key name="id-to-doc" match="li" use="concat('#',.)"/>
+    
     <xsl:template match="/">
-        <xsl:message>Processing <xsl:value-of select="count($hashDocs)"/> files...</xsl:message>
+        <xsl:message>Processing <xsl:value-of select="count($internalRefsDocs)"/> files...</xsl:message>
         <xsl:result-document href="{$outputDir}/internalErrors.xml">
             <div>
                 <h3>Hash Errors</h3>
-                <xsl:for-each select="$hashDocs">
+                <xsl:for-each select="$internalRefs">
                     <xsl:variable name="thisDocId" select="@data-doc"/>
                     <xsl:message>Processing <xsl:value-of select="$thisDocId"/></xsl:message>
                     <xsl:variable name="errors" as="xs:string*">
                         <xsl:for-each select="li">
                             <xsl:variable name="thisRef" select="."/>
                             <xsl:choose>
-                                <xsl:when test="$idDocs[@data-doc=$thisDocId]//key('id-to-doc',$thisRef)"/>
+                                <xsl:when test="$ids[@data-doc=$thisDocId]//key('id-to-doc',$thisRef)"/>
                                 <xsl:otherwise>
                                     <xsl:value-of select="."/>
                                 </xsl:otherwise>
@@ -48,15 +49,4 @@
             </div>
         </xsl:result-document>
     </xsl:template>
-                         
-    
-    <!--<xsl:template match="/">
-        <xsl:variable name="localLinks" select="//a[starts-with(@href,'#')]/@href/xs:string(.)"/>
-        <xsl:variable name="cleanRefs" select="for $n in $thisDocInternalRefs return substring-after($n,'#')" as="xs:string*"/>
-        <xsl:variable name="errors" select="hcmc:compareSeq($cleanRefs,$thisDocIds)"/>
-        <xsl:if test="not(empty($errors))">
-            <xsl:message>Found <xsl:value-of select="count($errors)"/></xsl:message>
-            <xsl:value-of select="string-join($errors,$line.separator)"/>
-        </xsl:if>
-    </xsl:template>-->
 </xsl:stylesheet>

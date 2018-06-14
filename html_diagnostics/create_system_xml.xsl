@@ -14,8 +14,8 @@
     <xsl:output method="xml"/>
     <xsl:template match="/">
         <ul>
-            <xsl:for-each select="$systemFiles">
-                <li><xsl:value-of select="normalize-space(.)"/></li>
+            <xsl:for-each select="tokenize($systemFilesTxt,$line.separator)">
+                <li><xsl:value-of select="concat('file:',normalize-space(.))"/></li>
             </xsl:for-each>
         </ul>
     </xsl:template>

@@ -1,7 +1,6 @@
 # Diagnostics
-Programmed diagnostics enable projects to enforce coherence and consistency, manage the workflow effectively, and measure their progress towards completeness. 
 
-This project will provide an [Oxygen](https://www.oxygenxml.com) project which you can open, then press a button, select a folder, and run a diagnostic process against your [TEI](https://www.tei-c.org) XML project files, generating an HTML page showing statistics, errors and warnings based on an analysis of your XML documents. The process is an ant task that can also be run outside Oxygen, supplying a single parameter, which is the path to the folder containing your TEI project.
+This project provides an [Oxygen](https://www.oxygenxml.com) project which you can open, then press a button, select a folder, and run a diagnostic process against your [TEI](https://www.tei-c.org) XML project files, generating an HTML page showing statistics, errors and warnings based on an analysis of your XML documents. The process is an ant task that can also be run outside Oxygen, supplying a single parameter, which is the path to the folder containing your TEI project.
 
 The diagnostic process checks that:
 
@@ -18,4 +17,6 @@ It will dereference private URI schemes which are correctly declared in TEI `<pr
 It will also generate a list of all the elements and attributes used in the project, along with usage counts.
 
 See the [Instructions](instructions.html) for full details.
+
+For further information on Diagnostics, see Holmes, Martin, and Joey Takeda. "Beyond Validation: Using Programmed Diagnostics to Learn About, Monitor, and Successfully Complete Your DH Project." Digital Humanities 2017 conference. McGill University. August 11, 2017. https://dh2017.adho.org/abstracts/140/140.pdf
 

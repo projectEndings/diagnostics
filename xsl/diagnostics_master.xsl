@@ -7,6 +7,7 @@
     xmlns:xh="http://www.w3.org/1999/xhtml"
     xmlns:tei="http://www.tei-c.org/ns/1.0"
     xmlns:teieg="http://www.tei-c.org/ns/Examples"
+    xmlns:functx="http://www.functx.com"
     xmlns:java-file="java:java.io.File"
     xmlns:java-uri="java:java.net.URI"
     exclude-result-prefixes="#all" 
@@ -166,6 +167,42 @@
         </xd:desc>
     </xd:doc>
     <xsl:variable name="uriSchemeRegex" select="replace(unparsed-text('uriSchemeRegex.txt'),'\s+','')"/>
+    
+    
+    <xd:doc>
+        <xd:desc>The IANA Media Types registry changes frequently, so we download the XML file each time
+        and then turn it into a Regular Expression</xd:desc>
+    </xd:doc>
+    <xsl:variable name="ianaMimetypesDoc" select="document('mimeTypes.xml')"/>
+    <xd:doc>
+        <xd:desc>The distinct mimetypes</xd:desc>
+    </xd:doc>
+    <xsl:variable name="mimeTypes" select="distinct-values($ianaMimetypesDoc//*:file[@type='template'])" as="xs:string+"/>
+ 
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="mimeTypeRegex" type="variable"/>
+            <xd:p>This (less ridiculous) regex is generated from the <xd:a 
+                href="https://www.iana.org/assignments/uri-schemes/uri-schemes.xml">IANA 
+                Unified Resource Identifier (URI) Scheme</xd:a>, and is designed to check
+                whether an undeclared prefix has a likely canonical reference. 
+            </xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="mimeTypeRegex" select="string-join(for $n in $mimeTypes return concat('(',functx:escape-for-regex($n),')'),'|')"/>
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="charsetsRegex" type="variable"/>
+            <xd:p>This (medium ridiculous) regex is generated from the <xd:a 
+                href="https://www.iana.org/assignments/character-sets/character-sets.xml">IANA 
+                Character Sets Registry</xd:a>, and is designed to check whether a declared
+                character encoding is valid.
+            </xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="charsetsRegex" select="replace(unparsed-text('charsetsRegex.txt'),'\s+','')"/>
     
     <!--**************************************************
         *           
@@ -534,6 +571,7 @@
             <!--<xsl:call-template name="badInternalLinks"/>-->
             <xsl:call-template name="badInternalLinksByPointer"/>
             <xsl:call-template name="badXmlLangValues"/>
+            <xsl:call-template name="badMimetypes"/>
         </div>
     </xsl:template>
 
@@ -789,6 +827,74 @@
         </xsl:call-template>
     </xsl:template>
     
+    
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:ref name="badMimetypes" type="template"/>
+            <xd:p>template: badMimetypes</xd:p>
+            <xd:p>This template checks that all @mimeType attributes have
+                values which conform with the permitted values in the IANA
+                Media Type registry.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template name="badMimetypes" as="element(xh:div)">
+        <xsl:message>Checking for bad mimeTypes...</xsl:message>
+        <xsl:variable name="filesToCheck" select="$teiDocs[descendant::*[@mimeType]]"/>
+        <xsl:variable name="filesCount" select="count($filesToCheck)"/>
+        <xsl:variable name="output" as="element(xh:ul)*">
+            <xsl:for-each select="$filesToCheck">
+                <xsl:variable name="thisDoc" select="."/>
+                <xsl:variable name="thisDocUri" select="document-uri(root(.))"/>
+                <xsl:variable name="thisDocFileName" select="hcmc:returnFileName(.)"/>
+                <xsl:message>Checking <xsl:value-of select="$thisDocFileName"/> (<xsl:value-of
+                    select="position()"/>/<xsl:value-of select="$filesCount"
+                    />)</xsl:message>
+                <xsl:variable name="temp" as="element()">
+                    <ul>
+                        <xsl:for-each select="//@mimeType">
+                            <xsl:variable name="tokens" select="tokenize(.,';')"/>
+                            <xsl:variable name="mime" select="normalize-space($tokens[1])"/>
+                            <xsl:variable name="charsetDecl" select="normalize-space($tokens[2])"/>
+                            <xsl:variable name="hasCharset" select="count($tokens) gt 1 and starts-with($charsetDecl,'charset')"/>
+                            <xsl:variable name="encoding" select="normalize-space(substring-after($charsetDecl,'='))"/>
+                            <xsl:if test="not(matches($mime, $mimeTypeRegex))">
+                                <!--<xsl:message>Found bad xml:lang value: <xsl:value-of select="."/></xsl:message>-->
+                                <li><span class="xmlAttName">mimeType</span>: 
+                                    <span class="xmlAttVal"><xsl:value-of select="$mime"/></span>
+                                </li>
+                            </xsl:if>
+                            <xsl:if test="$hasCharset and not(matches($encoding,$charsetsRegex,'i'))">
+                                <li><span class="xmlAttName">mimeType</span> (charset value): 
+                                    <span class="xmlAttVal"><xsl:value-of select="$encoding"/></span>
+                                </li>
+                            </xsl:if>
+                        </xsl:for-each>
+                    </ul>
+                </xsl:variable>
+                <xsl:if test="$temp//*:li">
+                    <ul>
+                        <li><xsl:value-of select="$thisDocUri"/>
+                            <xsl:sequence select="$temp"/>
+                        </li>
+                    </ul>
+                </xsl:if>
+            </xsl:for-each>
+        </xsl:variable>    
+        <xsl:call-template name="createDiagnosticsDiv">
+            <xsl:with-param name="id" select="'badMimetypes'"/>
+            <xsl:with-param name="explanation"
+                select="'These values for @mimeType attributes do not 
+                conform with those specified in the IANA Mimetype registry. Note that this
+                diagnostic does not check the accuracy of the mimeType value, but just
+                confirms that the mimeType is a legal value.'"/>
+            <xsl:with-param name="title" select="'Bad @mimeType Values'"/>
+            <xsl:with-param name="results" select="$output"/>
+            <xsl:with-param name="resultsCount"
+                select="count($output//xh:li[ancestor::xh:li])"/>
+        </xsl:call-template>
+    </xsl:template>
+    
+    
     <!--**************************************************
         *           
         *                  Functions
@@ -991,6 +1097,22 @@
         <!--<xsl:message select="$regex"/>-->
         <xsl:value-of select="$regex"/>
     </xsl:function>
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Taken from http://www.xsltfunctions.com/xsl/functx_escape-for-regex.html. "The functx:escape-for-regex function escapes a string that you wish to be taken literally rather than treated like a regular expression. This is useful when, for example, you are calling the built-in fn:replace function and you want any periods or parentheses to be treated like literal characters rather than regex special characters."</xd:p>
+        </xd:desc>
+        <xd:param name="arg">the string to escape</xd:param>
+        <xd:return>a string</xd:return>
+    </xd:doc>
+    <xsl:function name="functx:escape-for-regex" as="xs:string">
+        <xsl:param name="arg" as="xs:string?"/>
+        <xsl:sequence select="
+            replace($arg,
+            '(\.|\[|\]|\\|\||\-|\^|\$|\?|\*|\+|\{|\}|\(|\))','\\$1')
+            "/>
+    </xsl:function>
+    
     <!--Sample: file:/Users/joeytakeda/projectEndings/diagnostics/\./test/website_structure_standalone_test.xml#clickToZoomCaption-->
     
     
@@ -1046,6 +1168,8 @@
           </xsl:comment>
         </style>
     </xsl:variable>
+    
+    
 
 
 </xsl:stylesheet>

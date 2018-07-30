@@ -94,8 +94,11 @@
         <echo message="Executing diagnostics on directory ${projectDirFull}"/>
         <echo message="Creating diagnostics directory: ${outputDir}"/>
         <mkdir dir="${outputDir}"/>
+        <echo message="Downloading the IANA Media Types listing..."/>
+<!--        Download the IANA media types registry-->
+        <get src="https://www.iana.org/assignments/media-types/media-types.xml" dest="xsl/mimeTypes.xml"/>
     </target>
-
+    
     
     <target name="runDiagnostics">
         <description>

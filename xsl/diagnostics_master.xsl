@@ -19,9 +19,9 @@
         <xd:desc>
             <xd:p><xd:b>Started on:</xd:b> February 22, 2017</xd:p>
             <xd:p><xd:b>Authors:</xd:b> <xd:a href="http://mapoflondon.uvic.ca/HOLM3.htm">mholmes</xd:a>, <xd:a href="http://mapoflondon.uvic.ca/TAKE1.htm">jtakeda</xd:a>.</xd:p>
-            <xd:p> 
-                This XSLT produces the necessary pages for the diagnostics report. It calls upon
-                a statistics module and a diagnostics module. 
+            <xd:p>This XSLT produces a diagnostics report for any collection of TEI-XML files. See the
+                <xd:a href="http://github.com/projectEndings/diagnostics">Github Repository</xd:a> for detailed 
+                introductory comments and instructions for how to run this XSLT transformation.
             </xd:p>
             <xd:p>
                 Note that there are a lot of potential problems surrounding the differences between
@@ -32,6 +32,17 @@
                 Windows, but it's not clear why. If you pass the path to the projectDir at the command
                 line as in the instructions, though, it works.
             </xd:p>
+            <xd:p>This file is meant to serve as a foundation for more detailed diagnostics; individual projects
+            will likely want to customize this file to suit their own needs. To create an additional diagnostics check,
+            make sure you have first downloaded the  <xd:a href="http://github.com/projectEndings/diagnostics">Github Repository</xd:a> locally.
+            Once the project has been downloaded, you can add a new diagnostics check. We recommend the following process:
+            1) Add a new named template somewhere in this file
+            2) In this template, run your diagnostic check (you will, of course, need to know XSLT before writing a new check)
+            3) Store the results of your XSLT check (which should be in the form of XHTML ul/li elements) in a temporary variable
+            4) Pass the results, the name of the check, and the id (which becomes the @id attribute on the XHTML div)
+               into the <xd:ref name="createDiagnosticsDiv">createDiagnosticsDiv</xd:ref> template.
+            5) Add an xsl:call-template element to the <xd:ref name="generateDiagnosticsCheck">generateDiagnosticsChecks</xd:ref> template
+                and call the created template.</xd:p>
         </xd:desc>
         <xd:param name="projectDirectory">
             <xd:p>The directory that contains all of the XML documents to be analyzed.</xd:p>

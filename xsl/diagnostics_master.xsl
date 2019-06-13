@@ -69,6 +69,14 @@
         *
         **************************************************-->
   
+  <xd:doc scope="component">
+      <xd:desc>
+          <xd:ref name="baseDir" type="variable"/>
+          <xd:p>This is the esdcaped base directory.</xd:p>
+      </xd:desc>
+  </xd:doc>
+    <xsl:variable name="baseDir" select="concat('file:///', encode-for-uri(translate($projectDirectory, '\', '/')))"/>
+  
     <xd:doc scope="component">
         <xd:desc>
             <xd:ref name="projectCollection" type="variable"/>
@@ -76,7 +84,7 @@
                 XML documents in it. We'll process all of those documents.</xd:p></xd:desc>
     </xd:doc>
     <xsl:variable name="projectCollection"
-        select="collection(concat('file:///', translate($projectDirectory, '\', '/'), '?select=*.xml;recurse=yes'))"/>
+        select="collection(concat($baseDir, '?select=*.xml;recurse=yes'))"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -269,7 +277,7 @@
             is applied to the diagnostics/test directory.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:variable name="projectDirRel" select="replace($projectDirectory,'/\./','/')"/>
+    <xsl:variable name="projectDirRel" select="replace($baseDir,'/\./','/')"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -711,31 +719,34 @@
                                                 then $thisToken
                                                 else resolve-uri($thisToken, $thisDocUri)"/>
                                             
-                                            <!--<xsl:message>$thisToken = <xsl:value-of select="$thisToken"/>; 
-                                                $thisDocUri = <xsl:value-of select="$thisDocUri"/>
+                                          <!--  <xsl:message>$thisToken = <xsl:value-of select="$thisToken"/>; 
+                                                $thisDocUri = <xsl:value-of select="$thisDocUri"/>;
+                                                $targetDoc = <xsl:value-of select="$targetDoc"/>
                                             </xsl:message>-->
                                             
                                             <xsl:variable name="targetId" select="substring-after($thisToken, '#')"/>
                                             <xsl:variable name="fullTarget"
                                                 select="if (contains($thisToken, '#')) then concat($targetDoc, '#', $targetId) else $targetDoc"/>
                                             <xsl:variable name="fullTargCanonical" select="replace($fullTarget,'/\./','/')"/>
+                                   <!--         <xsl:message><xsl:value-of select="$idRegex"/></xsl:message>-->
                                             <xsl:choose>
                                                 <xsl:when test="$fullTargCanonical[matches(.,$idRegex)]">
                                                     <!--Do nothing-->
-                                                    <!--<xsl:message select="concat('Found match for:', $fullTargCanonical)"/>-->
+                                                  <!--  <xsl:message select="concat('Found match for:', $fullTargCanonical)"/>-->
                                                 </xsl:when>
                                                
                                                 <xsl:when test="
                                                     not(contains($fullTargCanonical, '#')) and
                                                     not(matches($fullTargCanonical,$prefixRegex)) and
                                                     hcmc:fileExists($fullTarget)">
-                                                   <!-- <xsl:message>Found document for <xsl:value-of select="$fullTarget"/>.</xsl:message>-->
+                                                    <xsl:message>Found document for <xsl:value-of select="$fullTarget"/>.</xsl:message>
                                                 </xsl:when>
                                                 <xsl:when test="matches($fullTargCanonical,'^[A-Za-z]:[^/\\]')">
                                                     <xsl:message><xsl:value-of select="$fullTargCanonical"/> is an undefined prefix</xsl:message>
                                                     <xsl:value-of select="$tokenOriginal"/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
+                                                    <xsl:message>Found broken pointer: <xsl:value-of select="$tokenOriginal"/></xsl:message>
                                                     <xsl:value-of select="$tokenOriginal"/>
                                                 </xsl:otherwise>
                                             </xsl:choose>
@@ -1099,14 +1110,15 @@
     <xsl:function name="hcmc:makeRegex" as="xs:string">
         <xsl:param name="strings"/>
         <xsl:param name="baseDir"/>
-        <xsl:variable name="escapedBaseDir" select="replace($baseDir, '\\', '/')"/>
-        <!--<xsl:message><xsl:value-of select="string-join($strings, '&#x0a;')"/></xsl:message>
-        <xsl:message><xsl:value-of select="$baseDir"/></xsl:message>-->
-        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat('file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/'),'')"/>
-        <xsl:variable name="regex" select="replace(concat('^file:', if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
+        <xsl:value-of select="concat('^',string-join(for $s in $strings return concat('(',functx:escape-for-regex($s),')'),'|'),'$')"/>
+       <!-- <xsl:variable name="escapedBaseDir" select="replace($baseDir, '\\', '/')"/>
+        <!-\-<xsl:message><xsl:value-of select="string-join($strings, '&#x0a;')"/></xsl:message>
+        <xsl:message><xsl:value-of select="$baseDir"/></xsl:message>-\->
+        <xsl:variable name="collapsedPaths" select="for $s in $strings return replace(replace($s,'/\./','/'),concat(if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/'),'')"/>
+        <xsl:variable name="regex" select="replace(concat(if (starts-with($escapedBaseDir, '/')) then '' else '/', $escapedBaseDir,'/(',string-join(for $s in $collapsedPaths return concat('(',$s,')'),'|'),')$'),'\.','\\.')"/>
         
-        <!--<xsl:message select="$regex"/>-->
-        <xsl:value-of select="$regex"/>
+        <!-\-<xsl:message select="$regex"/>-\->
+        <xsl:value-of select="$regex"/>-->
     </xsl:function>
     
     <xd:doc>

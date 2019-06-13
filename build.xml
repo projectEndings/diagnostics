@@ -47,9 +47,11 @@
         <attribute name="file" />
         <![CDATA[
         var location = "file://"+attributes.get("file").toString().replaceAll("\\\\","/");
+        location = location.toString().replaceAll(" ","%20");
         location = java.net.URLEncoder.encode(location, "UTF-8");
         location = location.toString().replaceAll("%3A",":");
         location = location.toString().replaceAll("%2F","/");
+        location = location.toString().replaceAll("%25","%");
         var uriLocation = java.net.URI.create(location);
         var desktop = java.awt.Desktop.getDesktop();
         desktop.browse(uriLocation);

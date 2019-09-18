@@ -946,6 +946,10 @@
 <!--            <xsl:when test="matches($token, '^[A-Za-z][A-Za-z\d\.\+\-]+://')">
                 <xsl:value-of select="false()"/>
             </xsl:when>-->
+<!--    Exclude obvious prefixes and things that look like XPath.        -->
+            <xsl:when test="matches($token,'(^(tei)|(xml)|(sch)|(xs):)|(::)|(\[)')">
+                <xsl:value-of select="false()"/>
+            </xsl:when>
 
             <xsl:when test="contains($token,':')">
                 <xsl:choose>

@@ -10,7 +10,7 @@ The diagnostic process checks that:
  - All values for the `@mimeType` attribute are legal media type values according to the [IANA Media Type Registry](https://www.iana.org/assignments/media-types/media-types.xml) and the [IANA Character Sets Registry](https://www.iana.org/assignments/character-sets/character-sets.xhtml)
  
  
-**Note**: All pointers are resolved relative to the root URI and not relative to an @xml:base value declared. We currently do not take @xml:base into account for resolving pointers as it is unclear how to resolve 
+**Note**: All pointers are resolved relative to the root URI and not relative to an @xml:base value declared. We currently do not take @xml:base into account for resolving pointers as it is unclear how to resolve them.
 
 It will dereference private URI schemes which are correctly declared in TEI `<prefixDef>` elements. Incorrect values are listed by document.
 

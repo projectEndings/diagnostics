@@ -33,9 +33,6 @@
     <property name="projectDir" value=""/>
     <dirname property="antfile.dir" file="${ant.file}"/>
     
-
-        
-    
     <condition property="promptForFile">
         <equals arg1="${projectDir}" arg2=""/>
     </condition>
@@ -160,7 +157,10 @@
     
     <target name="open" depends="open.if.windows, open.if.unix">
 
-        <open file="${diagnosticsFile}"/>
+        <!--<open file="${diagnosticsFile}"/>-->
+        <exec executable="firefox">
+            <arg value="${diagnosticsFile}"/>
+        </exec>
     </target>
     
     <target name="open.if.windows" if="${isWindows}">

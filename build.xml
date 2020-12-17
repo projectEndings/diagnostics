@@ -156,9 +156,12 @@
     </target>
     
     <target name="open" depends="open.if.windows, open.if.unix">
-
-        <!--<open file="${diagnosticsFile}"/>-->
-        <exec executable="firefox">
+       
+        <exec executable="open" if:true="${isMac}">
+            <arg value="${diagnosticsFile}"/>
+        </exec>
+        
+        <exec executable="firefox" unless:true="${isMac}">
             <arg value="${diagnosticsFile}"/>
         </exec>
     </target>
@@ -170,7 +173,20 @@
     </target>
     
     <target name="open.if.unix" if="${isUnix}">
+        <!--Convert the path-->
         <property name="diagnosticsFile" value="${outputDir}/diagnostics.html"/>
+        
+        <!--Now determine if I'm a mac-->
+        <exec executable="uname"
+            outputproperty="os.type"/>
+        
+        <!--Taken, with thanks, from
+            https://stackoverflow.com/questions/19500112/can-i-detect-if-i-am-on-a-linux-system-and-not-a-generic-unix-system-using-ant-->
+
+        <condition property="isMac" value="true" else="false">
+            <equals arg1="${os.type}" arg2="Darwin"/>
+        </condition>
+        
         <echo message="Opening ${diagnosticsFile}"/>
     </target>
     
